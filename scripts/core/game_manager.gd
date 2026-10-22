@@ -12,6 +12,8 @@ var debug_enabled: bool = false
 var forced_ghost_id: StringName = &""
 var last_ghost_id: StringName = &""
 var investigations_started: int = 0
+## True while the guided "Learn to Play" investigation is running.
+var tutorial_mode: bool = false
 var database: GameDatabase
 var rng := RandomNumberGenerator.new()
 
@@ -31,14 +33,14 @@ func _ready() -> void:
 			forced_ghost_id = StringName(arg.trim_prefix("--ghost="))
 
 
-## Picks the ghost for a new investigation. A repeat of the previous type is
-## re-rolled once, so consecutive runs usually (75%) meet a different ghost.
 func _exit_tree() -> void:
 	# Release static caches so the engine exits without leak warnings.
 	UiTheme.clear_cache()
 	Flashlight.clear_cache()
 
 
+## Picks the ghost for a new investigation. A repeat of the previous type is
+## re-rolled once, so consecutive runs usually (75%) meet a different ghost.
 func pick_ghost_definition() -> GhostDefinition:
 	if forced_ghost_id != &"":
 		var forced := database.get_ghost(forced_ghost_id)
@@ -57,6 +59,22 @@ func register_investigation(ghost: GhostDefinition) -> void:
 
 
 func start_investigation() -> void:
+	tutorial_mode = false
+	_load_investigation()
+
+
+## Starts the guided tutorial: a normal-behaving ghost that cannot kill.
+func start_tutorial() -> void:
+	tutorial_mode = true
+	_load_investigation()
+
+
+## Restarts in the current mode (tutorial stays tutorial).
+func restart_current() -> void:
+	_load_investigation()
+
+
+func _load_investigation() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(INVESTIGATION_SCENE)
 

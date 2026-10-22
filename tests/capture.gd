@@ -17,6 +17,10 @@ func _initialize() -> void:
 		_scenario = args[0]
 	if _scenario == "menu":
 		change_scene_to_file("res://scenes/main/main_menu.tscn")
+	elif _scenario == "tutorial":
+		var gm: Node = root.get_node("GameManager")
+		gm.set("forced_ghost_id", &"whisperer")
+		gm.call_deferred("start_tutorial")
 	else:
 		var gm: Node = root.get_node("GameManager")
 		gm.set("forced_ghost_id", &"disturbed" if _scenario.ends_with("_d") else &"whisperer")
@@ -53,6 +57,24 @@ func _setup() -> void:
 	var p: Node = _inv.player
 	var house: Node = _inv.house
 	match _scenario:
+		"tutorial":
+			_shots = [[30, "tutorial_start"],
+				[35, "", func() -> void:
+					while _inv.tutorial.current_title() != "Restore the power":
+						_inv.tutorial.skip()
+					p.global_position = house.cell_to_world(Vector2i(22, 10))
+					p.aim_override = Vector2.UP
+					p.equipment.use_current()],
+				[80, "tutorial_fuse"],
+				[85, "", func() -> void:
+					_inv.electrical.set_power(true)
+					while _inv.tutorial.current_title() != "Spirit Box":
+						_inv.tutorial.skip()
+					p.equipment.select(1)
+					p.equipment.add_item(_inv.database.get_equipment(&"spirit_box"))
+					p.global_position = _inv.ghost.favorite_room.center_world() + Vector2(0, 30)],
+				[130, "tutorial_status"],
+			]
 		"overview", "overview_d":
 			_shots = [[20, "start_yard"],
 				[30, "", func() -> void:

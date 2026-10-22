@@ -26,7 +26,7 @@ All screenshots are real frames rendered by the game (see [Testing](#testing)).
 1. Install Godot 4.6 (or newer 4.x) from <https://godotengine.org/download>.
 2. Open Godot → **Import** → select this folder's `project.godot`.
 3. Press **F5** (Run Project). The main menu opens.
-4. Click **Begin Investigation**.
+4. Click **Learn to Play (Tutorial)** for a guided training case, or **Begin Investigation** for a real one.
 
 To build a Windows executable: *Project → Export → Windows Desktop → Export Project* (requires the
 Godot export templates, installed from the editor via *Editor → Manage Export Templates*).
@@ -53,6 +53,7 @@ All bindings live in *Project Settings → Input Map* and can be rebound there.
 | 1 – 4 | Select equipment slot |
 | J | Open / close the journal |
 | Esc | Close the journal / pause menu |
+| Tab | Skip the current tutorial step (Learn to Play only) |
 
 Debug mode (enable on the main menu, or `-- --debug-mode`):
 
@@ -68,6 +69,28 @@ Debug mode (enable on the main menu, or `-- --debug-mode`):
 | F10 | Reset the investigation |
 
 Debug functionality is off by default and does nothing during ordinary play.
+
+## Learn to Play (tutorial)
+
+![Tutorial](docs/screenshots/tutorial_start.jpg)
+
+**Learn to Play** on the main menu starts a guided training investigation in the same house. The ghost is a
+normal ghost type (random), running the same AI: it roams, interacts, leaves evidence, manifests and hunts
+exactly as in a real case. The only difference is that **it cannot kill you**. If it catches you, you get the
+full scare, the hunt ends and the investigation continues.
+
+An instruction card (top right) walks through 18 steps, each completed by actually doing it:
+moving → flashlight → taking the Thermometer, EMF Reader and UV Flashlight → entering the house → the fuse box
+→ light switches → finding the cold room with the thermometer → an EMF reading → sweeping with UV → swapping
+for the Spirit Box and Video Camera at the van → a spirit box session in the dark → recording on camera →
+examining a notebook → marking the journal and choosing a conclusion → the warded safe room → a **practice
+hunt** → the (optional) exorcism → leaving.
+
+* A pulsing ring marks the current objective (the racks, the fuse box, the ghost's room, the latest disturbance…);
+  when it is off-screen, a chevron beside the investigator points the way.
+* A live hint line reacts to the situation, for example "The lights in the Kitchen are on. Switch them off.", "The power is out…",
+  or "Select it with its number key, then press F", so a step never stalls silently when the ghost undoes something.
+* **Tab** skips a step. The case file at the end is marked as a training investigation.
 
 ## How to play (a short field guide)
 
@@ -137,6 +160,7 @@ Debug functionality is off by default and does nothing during ordinary play.
   pause menu, death screen, results/case file, restart (75 % chance of meeting a different ghost type).
 * **Audio**: `AudioManager` with Ambience / Equipment / Ghost / Player / UI / Music buses, positional sounds,
   and every sound synthesized procedurally at startup (no third-party audio).
+* **Learn to Play tutorial** (see above).
 * **Debug mode** (see controls).
 
 ## Known limitations
@@ -215,8 +239,8 @@ Everything below was actually run in a Linux container with Godot 4.6 stable.
 
 | Kind | Command | Result |
 |---|---|---|
-| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 62 scripts, 0 failures |
-| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **125 passed, 0 failed** |
+| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 65 scripts, 0 failures |
+| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **168 passed, 0 failed** (6 consecutive runs) |
 | Scene smoke runs | `godot --headless --path . --quit-after 300` and the investigation scene directly | no errors |
 | Balance probe | `godot --headless --path . --fixed-fps 60 -s res://tests/balance_probe.gd` | see below |
 | Rendered frames | `xvfb-run godot --path . --rendering-driver opengl3 -s res://tests/capture.gd -- overview` | screenshots in this README |
@@ -226,7 +250,10 @@ The integration tests drive real investigation scenes: doors block and open, the
 the ward, pickups/swap/drop, each evidence type is detectable with the right tool and *only* produced by the
 right ghost, spirit box conditions, camera-only orbs, perception-dependent visibility, a hunt that catches a
 player in the open, the safe room protecting a player through a hunt, exorcism success and failure, journal
-filtering and input routing (J / Esc / 1–4 / F / G), results and restart.
+filtering and input routing (J / Esc / 1–4 / F / G), results and restart. The tutorial tests check that the
+ghost is a normal definition running its normal AI, that a catch is not fatal, that the practice hunt starts
+and completes, and that every equipment step is completable through the ghost's natural behaviour for
+**both** ghost types without skipping (following the objective marker and live hints, as a player would).
 
 Balance probe (passive player standing in the ghost's room, power off, no flashlight — the harshest case):
 each evidence type became detectable within roughly 15–160 s; first hunts occurred at about 2–3.5 minutes.

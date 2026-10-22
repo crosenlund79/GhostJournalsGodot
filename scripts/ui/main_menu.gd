@@ -35,6 +35,7 @@ func _ready() -> void:
 	box.add_child(HSeparator.new())
 	var start := UiTheme.make_button("Begin Investigation", _on_start)
 	box.add_child(start)
+	box.add_child(UiTheme.make_button("Learn to Play (Tutorial)", func() -> void: GameManager.start_tutorial()))
 	_debug_toggle = Button.new()
 	_debug_toggle.toggle_mode = true
 	_debug_toggle.button_pressed = GameManager.debug_enabled

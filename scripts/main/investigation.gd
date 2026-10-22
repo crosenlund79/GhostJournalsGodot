@@ -47,6 +47,8 @@ var death_screen: DeathScreen
 var results_screen: ResultsScreen
 var camera_overlay: CameraOverlay
 var debug_overlay: DebugOverlay
+var tutorial: TutorialDirector
+var _release_timer: float = -1.0
 
 var _rng := RandomNumberGenerator.new()
 var _death_timer: float = -1.0
@@ -66,7 +68,19 @@ func _ready() -> void:
 	_connect_signals()
 	AudioManager.start_loop(&"ambience", &"ambience_loop", -4.0)
 	manager.add_field_note("Arrived at Hollow Lane. The house is dark; the power is off.")
-	hud.show_notice("Take what you need from the van. Find the fuse box.", &"info")
+	if GameManager.tutorial_mode:
+		_setup_tutorial()
+	else:
+		hud.show_notice("Take what you need from the van. Find the fuse box.", &"info")
+
+
+func _setup_tutorial() -> void:
+	manager.is_tutorial = true
+	ghost.harmless = true
+	tutorial = TutorialDirector.new()
+	tutorial.name = "TutorialDirector"
+	add_child(tutorial)
+	tutorial.setup(self)
 
 
 func _exit_tree() -> void:
@@ -227,10 +241,10 @@ func _connect_signals() -> void:
 	journal.opened.connect(func() -> void: player.ui_blocked = true)
 	journal.closed.connect(func() -> void: player.ui_blocked = false)
 	pause_menu.resume_requested.connect(pause_menu.close)
-	pause_menu.restart_requested.connect(GameManager.start_investigation)
+	pause_menu.restart_requested.connect(GameManager.restart_current)
 	pause_menu.menu_requested.connect(GameManager.go_to_main_menu)
 	death_screen.continue_requested.connect(_show_results)
-	death_screen.restart_requested.connect(GameManager.start_investigation)
+	death_screen.restart_requested.connect(GameManager.restart_current)
 	results_screen.restart_requested.connect(GameManager.start_investigation)
 	results_screen.menu_requested.connect(GameManager.go_to_main_menu)
 	warding_lamp.examined.connect(func(text: String) -> void: manager.notify(text, &"info"))
@@ -285,6 +299,9 @@ func _on_power_changed(on: bool, reason: String) -> void:
 func _on_player_caught() -> void:
 	if player.is_dead or manager.finished:
 		return
+	if ghost.harmless:
+		_harmless_catch()
+		return
 	journal.close()
 	player.die()
 	AudioManager.stop_loop(&"hunt")
@@ -294,7 +311,20 @@ func _on_player_caught() -> void:
 	_death_timer = 1.8
 
 
+## Tutorial catch: the full scare, then the ghost lets go and the hunt ends.
+func _harmless_catch() -> void:
+	AudioManager.play(&"death", -6.0)
+	manager.notify("It caught you. In a real investigation, you would be dead.", &"danger")
+	manager.add_field_note("The entity caught me during a hunt. (Training: no harm done.)")
+	_release_timer = 1.4
+
+
 func _process(delta: float) -> void:
+	if _release_timer >= 0.0:
+		_release_timer -= delta
+		if _release_timer < 0.0:
+			ghost.release_player()
+			hunt_director.end_hunt()
 	if _death_timer >= 0.0:
 		_death_timer -= delta
 		player.camera.offset = Vector2(randf_range(-3, 3), randf_range(-3, 3)) * clampf(_death_timer, 0.0, 1.0)

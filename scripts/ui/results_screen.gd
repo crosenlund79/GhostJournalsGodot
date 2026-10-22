@@ -54,6 +54,8 @@ func show_results(results: Dictionary) -> void:
 	var survived: bool = results.get("survived", false)
 	var selected: String = results.get("selected_ghost", "")
 	var correct: bool = results.get("correct", false)
+	if results.get("tutorial", false):
+		_row("Mode", "Training investigation (Learn to Play)", Color(0.82, 0.86, 0.72))
 	_row("Outcome", "Survived" if survived else "Did not survive")
 	_row("Time on site", results.get("duration", "--:--"))
 	_row("The entity was", results.get("actual_ghost", "?"))

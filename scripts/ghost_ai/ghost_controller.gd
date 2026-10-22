@@ -45,6 +45,8 @@ var perceived_amount: float = 0.0
 ## > 0 while a ritual is being performed nearby (raises aggression).
 var ritual_provocation: float = 0.0
 var debug_reveal: bool = false
+## Tutorial ghosts behave normally but a catch is never fatal.
+var harmless: bool = false
 var caught_player: bool = false
 var facing: Vector2 = Vector2.DOWN
 
@@ -593,6 +595,12 @@ func _catch_player() -> void:
 	if player:
 		facing = (player.global_position - global_position).normalized()
 	player_caught.emit()
+
+
+## Lets go of a caught player (harmless ghosts only) and resumes normal behaviour.
+func release_player() -> void:
+	caught_player = false
+	visual.set_horror(false)
 
 
 # --- Banishment ---------------------------------------------------------------

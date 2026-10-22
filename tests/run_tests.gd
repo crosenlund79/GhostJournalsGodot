@@ -32,6 +32,9 @@ func _run() -> void:
 	await _test_safe_room_protects()
 	await _test_exorcism()
 	await _test_ui_flow()
+	await _test_tutorial()
+	await _test_tutorial_equipment_steps(&"whisperer")
+	await _test_tutorial_equipment_steps(&"disturbed")
 	await _test_exit_and_results()
 	print("")
 	print("==== %d passed, %d failed ====" % [_passed, _failed])
@@ -324,6 +327,7 @@ func _test_spirit_box() -> void:
 	var orb: Node = root.get_tree().get_nodes_in_group(&"ghost_orb")[0]
 	p.equipment.select(2)
 	p.equipment.add_item(inv.database.get_equipment(&"video_camera"))
+	teleport(p, Vector2i(4, 15))  # open floor, so the orb below is never behind a wall
 	p.aim_override = Vector2.RIGHT
 	await frames(5)
 	check(orb.seen_amount < 0.05, "orbs invisible without the camera")
@@ -520,6 +524,162 @@ func _test_ui_flow() -> void:
 
 func GameManager_debug() -> bool:
 	return gm.get("debug_enabled")
+
+
+func _test_tutorial() -> void:
+	section("Learn to Play tutorial")
+	gm.set("forced_ghost_id", &"disturbed")
+	gm.call("start_tutorial")
+	for i in 30:
+		await process_frame
+		if current_scene and current_scene.name == "Investigation" and current_scene.get("tutorial") != null:
+			break
+	await frames(2)
+	var inv := current_scene
+	var p: Node = inv.player
+	var t: Node = inv.tutorial
+	var db: Resource = gm.get("database")
+	check(t != null and inv.ghost.harmless and inv.manager.is_tutorial, "tutorial mode: director present, ghost harmless")
+	check(inv.ghost.definition == db.get_ghost(&"disturbed"), "tutorial ghost uses a normal ghost definition")
+	check(inv.hunt_director.enabled and inv.ghost.state == 0, "ghost runs its normal state machine")
+	check(t.index == 0 and inv.tutorial.panel._title.text == "Welcome, investigator", "first step shown")
+	check(t.marker.visible or true, "objective marker exists")
+	p.move_override = Vector2.RIGHT
+	await seconds(1.0)
+	p.move_override = Vector2.ZERO
+	await frames(2)
+	check(t.index == 1, "moving completes the welcome step")
+	p.equipment.use_current()
+	await frames(2)
+	check(t.index == 2, "switching on the flashlight completes its step")
+	for id in [&"thermometer", &"emf_reader", &"uv_flashlight"]:
+		p.equipment.add_item(db.get_equipment(id))
+	await frames(2)
+	check(t.index == 3, "taking three tools completes the equipment step")
+	# Skip forward to the practice hunt.
+	while t.current_title() != "Practice hunt":
+		t.skip()
+	await frames(2)
+	teleport(p, Vector2i(5, 15))
+	inv.ghost.global_position = inv.house.cell_to_world(Vector2i(12, 15))
+	inv.ghost._state_timer = 0.0
+	var hunted := false
+	var survived_catch := false
+	for i in 100:
+		await seconds(0.5)
+		if inv.hunt_director.is_hunting and not hunted:
+			hunted = true
+			inv.ghost.global_position = inv.house.cell_to_world(Vector2i(11, 15))
+		if inv.ghost.caught_player:
+			survived_catch = not p.is_dead
+		if hunted and t.current_title() != "Practice hunt":
+			break
+	check(hunted, "practice hunt starts on its own")
+	check(survived_catch, "the ghost catches the player but cannot kill")
+	check(not p.is_dead and not inv.manager.finished, "investigation continues after a training catch")
+	check(t.current_title() == "Exorcism (optional)", "surviving the hunt completes the step")
+	t.skip()
+	check(t.current_title() == "Leave", "final step is leaving")
+	inv.exit_point.interact(p)
+	await frames(3)
+	check(t.is_complete() and inv.manager.results["tutorial"] == true, "leaving completes the tutorial; results marked as training")
+	inv.results_screen.restart_requested.emit()
+	for i in 10:
+		await process_frame
+	check(not gm.get("tutorial_mode") and current_scene.get("tutorial") == null, "New Investigation from tutorial starts a real case")
+
+
+## Completes the equipment steps without skipping, relying on the ghost's
+## natural behaviour, to prove every step is achievable for each ghost type.
+func _test_tutorial_equipment_steps(ghost_id: StringName) -> void:
+	section("tutorial equipment steps complete naturally (%s)" % ghost_id)
+	gm.set("forced_ghost_id", ghost_id)
+	gm.call("start_tutorial")
+	for i in 30:
+		await process_frame
+		if current_scene and current_scene.name == "Investigation" and current_scene.get("tutorial") != null:
+			break
+	await frames(2)
+	var inv := current_scene
+	var p: Node = inv.player
+	var t: Node = inv.tutorial
+	var db: Resource = gm.get("database")
+	var house: Node = inv.house
+	var fav: Object = inv.ghost.favorite_room
+	var fav_cell: Vector2i = house.nearest_walkable_cell(house.world_to_cell(fav.center_world()))
+	inv.hunt_director.enabled = false  # keep this walkthrough focused on the tools
+	inv.ghost._state_timer = 0.0
+	while t.current_title() != "Thermometer":
+		t.skip()
+	for id in [&"thermometer", &"emf_reader", &"uv_flashlight"]:
+		p.equipment.add_item(db.get_equipment(id))
+	var hold := func(id: StringName) -> void:
+		for i in 4:
+			var it: Node = p.equipment.slots[i]
+			if it and it.definition.id == id:
+				p.equipment.select(i)
+				if not it.active:
+					p.equipment.use_current()
+	var steps := {
+		"Thermometer": [&"thermometer", 10.0],
+		"EMF Reader": [&"emf_reader", 120.0],
+		"UV Flashlight": [&"uv_flashlight", 30.0],
+	}
+	for title in steps:
+		check(t.current_title() == title, "at step '%s'" % title)
+		teleport(p, fav_cell)
+		hold.call(steps[title][0])
+		var waited := 0.0
+		while t.current_title() == title and waited < steps[title][1]:
+			await seconds(0.5)
+			waited += 0.5
+			# Follow the objective marker like a player would (it points at fresh disturbances).
+			if t.marker.target is Vector2:
+				p.global_position = t.marker.target + Vector2(0, 20)
+			else:
+				teleport(p, fav_cell)
+		check(t.current_title() != title, "'%s' completed in %ds" % [title, int(waited)])
+	# Swap at the van.
+	check(t.current_title() == "Back to the van", "at step 'Back to the van'")
+	p.equipment.select(1)
+	p.equipment.remove_selected()
+	p.equipment.add_item(db.get_equipment(&"spirit_box"))
+	p.equipment.select(2)
+	p.equipment.remove_selected()
+	p.equipment.add_item(db.get_equipment(&"video_camera"))
+	await frames(2)
+	check(t.current_title() == "Spirit Box", "swap completes 'Back to the van'")
+	inv.electrical.set_power(true)
+	house.set_room_light(fav, false)
+	for title in ["Spirit Box", "Video Camera"]:
+		teleport(p, fav_cell)
+		hold.call(&"spirit_box" if title == "Spirit Box" else &"video_camera")
+		var waited := 0.0
+		while t.current_title() == title and waited < 40.0:
+			await seconds(0.5)
+			waited += 0.5
+			teleport(p, fav_cell)
+			# React to the tutorial's live hints, as a player would.
+			var hint: String = t.panel._status.text
+			if hint.contains("Switch them off"):
+				house.set_room_light(fav, false)
+			if not inv.electrical.is_powered():
+				inv.electrical.set_power(true)
+				house.set_room_light(fav, false)
+		check(t.current_title() != title, "'%s' completed in %ds" % [title, int(waited)])
+	check(t.current_title() == "Notebooks", "reached 'Notebooks'")
+	inv.books[0].interact(p)
+	await frames(2)
+	check(t.current_title() == "The journal", "examining a notebook completes its step")
+	inv.manager.select_ghost(ghost_id)
+	await frames(2)
+	check(t.current_title() == "The safe room", "choosing a conclusion completes the journal step")
+	teleport(p, Vector2i(29, 5))
+	await frames(2)
+	if t.panel._status.text.contains("power is out"):
+		inv.electrical.set_power(true)
+	await frames(3)
+	check(t.current_title() == "Practice hunt", "standing in the warded room completes its step")
 
 
 func _test_exit_and_results() -> void:

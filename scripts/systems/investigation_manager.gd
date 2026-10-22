@@ -23,6 +23,7 @@ var exorcism_result: StringName = &"not_attempted"
 var player_died: bool = false
 var finished: bool = false
 var results: Dictionary = {}
+var is_tutorial: bool = false
 
 
 func setup(db: GameDatabase, ghost: GhostDefinition) -> void:
@@ -136,6 +137,7 @@ func finish(survived: bool) -> Dictionary:
 		"exorcism": exorcism_result,
 		"survived": survived,
 		"duration": time_string(),
+		"tutorial": is_tutorial,
 	}
 	investigation_finished.emit(results)
 	return results
