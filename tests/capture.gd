@@ -9,6 +9,9 @@ var _shots: Array = []
 
 
 func _initialize() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://tests/output"))
+	var ignore := FileAccess.open("res://tests/output/.gdignore", FileAccess.WRITE)
+	ignore.close()
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0:
 		_scenario = args[0]
@@ -97,9 +100,10 @@ func _setup() -> void:
 					p.equipment.select(2)
 					p.equipment.add_item(_inv.database.get_equipment(&"video_camera"))
 					p.equipment.use_current()
-					var orb = _inv.get_tree().get_nodes_in_group(&"ghost_orb")[0]
-					orb.global_position = p.global_position + Vector2(80, 5)
-					orb._target = orb.global_position],
+					var orbs: Array = _inv.get_tree().get_nodes_in_group(&"ghost_orb")
+					if not orbs.is_empty():
+						orbs[0].global_position = p.global_position + Vector2(80, 5)
+						orbs[0]._target = orbs[0].global_position],
 				[350, "camera_orb"],
 				[352, "", func() -> void:
 					p.equipment.use_current()

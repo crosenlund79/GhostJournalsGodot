@@ -66,6 +66,7 @@ var _last_known := Vector2.ZERO
 var _flicker_timer: float = 0.0
 var _flicker_on: bool = false
 var _orbs: Array[GhostOrb] = []
+var _step_timer: float = 0.0
 
 
 func setup(def: GhostDefinition, game_balance: GameBalance, world_house: House, target_player: Player,
@@ -554,6 +555,11 @@ func _process_hunting(delta: float) -> void:
 		elif not has_path() and _pending_door == null:
 			_chasing = false
 			_search()
+	# Heavy footsteps betray the hunter's position.
+	_step_timer -= delta
+	if _step_timer <= 0.0 and has_path():
+		_step_timer = 0.38 if _sees_player else 0.5
+		AudioManager.play_at(&"footstep", global_position, 6.0, 0.55 * definition.voice_pitch, 520.0)
 	if _pending_door:
 		_wait_for_door(delta)
 	else:

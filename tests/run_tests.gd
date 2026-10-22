@@ -31,6 +31,7 @@ func _run() -> void:
 	await _test_hunt_kills_player()
 	await _test_safe_room_protects()
 	await _test_exorcism()
+	await _test_ui_flow()
 	await _test_exit_and_results()
 	print("")
 	print("==== %d passed, %d failed ====" % [_passed, _failed])
@@ -465,6 +466,60 @@ func _test_exorcism() -> void:
 	c2.interact(inv2.player)
 	check(inv2.manager.exorcism_result == &"failed" and inv2.hunt_director.is_hunting, "wrong name fails and triggers a hunt")
 	inv2.hunt_director.end_hunt()
+
+
+func press_action(action: StringName) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await process_frame
+	var up := InputEventAction.new()
+	up.action = action
+	up.pressed = false
+	Input.parse_input_event(up)
+	await process_frame
+
+
+func _test_ui_flow() -> void:
+	section("UI flow & input routing")
+	var inv := await start_investigation(&"whisperer")
+	var p: Node = inv.player
+	await press_action(&"journal")
+	check(inv.journal.is_open and p.ui_blocked, "J opens the journal and freezes the investigator")
+	var btn: Button = inv.journal._evidence_buttons[&"orbs"]
+	btn.pressed.emit()
+	check(inv.manager.get_mark(&"orbs") == 1 and btn.text.contains("+"), "journal button confirms evidence")
+	var excluded: Button = inv.journal._ghost_buttons[&"disturbed"]
+	check(excluded.disabled, "contradicting entity is excluded in the journal")
+	(inv.journal._ghost_buttons[&"whisperer"] as Button).pressed.emit()
+	check(inv.manager.selected_ghost_id == &"whisperer", "journal selects a conclusion")
+	await press_action(&"pause")
+	check(not inv.journal.is_open and not paused, "Esc closes the journal first")
+	await press_action(&"pause")
+	check(inv.pause_menu.is_open and paused, "Esc opens the pause menu and pauses")
+	await press_action(&"pause")
+	check(not inv.pause_menu.is_open and not paused, "Esc again resumes")
+	# Slot keys and F.
+	p.equipment.add_item(inv.database.get_equipment(&"thermometer"))
+	await press_action(&"slot_2")
+	check(p.equipment.selected_index == 1, "number key selects a slot")
+	await press_action(&"use_equipment")
+	check(p.equipment.get_current().active, "F toggles the held equipment")
+	await press_action(&"drop_item")
+	await frames(2)
+	check(p.equipment.slots[1] == null, "G drops the held item")
+	check(inv.item_root.get_children().any(func(n: Node) -> bool: return n.get("definition") is Resource and n.definition.id == &"thermometer"), "dropped item appears in the world")
+	# HUD shows a reading and prompt plumbing works.
+	p.equipment.select(0)
+	p.equipment.use_current()
+	await frames(2)
+	check(inv.hud._item_label.text == "Flashlight" and inv.hud._reading_label.text.begins_with("beam on"), "HUD shows held item and state")
+	check(not GameManager_debug(), "debug mode off by default")
+
+
+func GameManager_debug() -> bool:
+	return gm.get("debug_enabled")
 
 
 func _test_exit_and_results() -> void:

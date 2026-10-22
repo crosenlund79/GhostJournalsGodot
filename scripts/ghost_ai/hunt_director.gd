@@ -30,7 +30,7 @@ func setup(ghost_controller: GhostController, target_player: Player, world_house
 	balance = game_balance
 	_rng.randomize()
 	_check_timer = balance.hunt_check_interval
-	cooldown = balance.hunt_cooldown * 0.5
+	cooldown = balance.first_hunt_delay
 
 
 func _process(delta: float) -> void:

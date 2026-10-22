@@ -268,10 +268,18 @@ func _build_switches() -> void:
 		var sw: LightSwitch = switch_scene.instantiate()
 		sw.room = room
 		sw.house = self
-		sw.position = cell_to_world(room.switch_cell)
+		sw.position = cell_to_world(room.switch_cell) + _wall_mount_offset(room.switch_cell)
 		sw.name = "Switch_%s" % room.id
 		object_root.add_child(sw)
 		light_switches.append(sw)
+
+
+## Pushes a wall-mounted object from a cell centre toward an adjacent wall.
+func _wall_mount_offset(cell: Vector2i) -> Vector2:
+	for dir in [Vector2i.UP, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.DOWN]:
+		if char_at(cell + dir) == "#":
+			return Vector2(dir) * (TILE * 0.5 - 6.0)
+	return Vector2.ZERO
 
 
 func _build_navigation() -> void:

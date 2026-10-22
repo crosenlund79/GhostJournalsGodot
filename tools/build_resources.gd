@@ -10,6 +10,10 @@ func _initialize() -> void:
 	var ghosts := _build_ghosts()
 	var equipment := _build_equipment()
 	var balance := GameBalance.new()
+	balance.darkness_drain = 0.12
+	balance.flashlight_darkness_drain = 0.05
+	balance.power_out_multiplier = 1.35
+	balance.ghost_proximity_drain = 0.15
 	_save(balance, "res://resources/balance/default_balance.tres")
 	var db := GameDatabase.new()
 	db.evidence = evidence
@@ -89,8 +93,8 @@ func _build_ghosts() -> Array[GhostDefinition]:
 	w.light_weight = 1.2
 	w.object_weight = 1.0
 	w.power_trip_weight = 0.08
-	w.manifestation_chance = 0.07
-	w.darkness_manifest_bonus = 0.08
+	w.manifestation_chance = 0.05
+	w.darkness_manifest_bonus = 0.04
 	w.whisper_interval = Vector2(14.0, 26.0)
 	w.proximity_aggression = 1.0
 	w.hunt_sanity_threshold = 45.0
@@ -118,11 +122,11 @@ func _build_ghosts() -> Array[GhostDefinition]:
 	d.light_weight = 1.0
 	d.object_weight = 1.2
 	d.power_trip_weight = 0.22
-	d.manifestation_chance = 0.06
+	d.manifestation_chance = 0.045
 	d.darkness_manifest_bonus = 0.0
 	d.whisper_interval = Vector2.ZERO
 	d.proximity_aggression = 1.6
-	d.hunt_sanity_threshold = 62.0
+	d.hunt_sanity_threshold = 58.0
 	d.hunt_chance = 0.18
 	d.hunt_duration = Vector2(24.0, 32.0)
 	d.hunt_power_trip_chance = 0.35
