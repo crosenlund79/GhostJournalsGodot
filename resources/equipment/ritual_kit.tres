@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/equipment/ritual_kit.tscn" id="1_omay1"]
+[ext_resource type="Script" path="res://scripts/equipment/equipment_definition.gd" id="2_3e527"]
+
+[resource]
+script = ExtResource("2_3e527")
+id = &"ritual_kit"
+display_name = "Ritual Kit"
+short_name = "Rite"
+description = "Salt and candles for the rite of expulsion."
+scene = ExtResource("1_omay1")
+use_hint = "lay circle"

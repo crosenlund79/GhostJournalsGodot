@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="GhostDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/ghost_ai/ghost_definition.gd" id="1_nusxk"]
+
+[resource]
+script = ExtResource("1_nusxk")
+id = &"whisperer"
+display_name = "The Whisperer"
+description = "A patient presence that lingers in dark rooms and speaks to those who sit alone with it."
+behaviour_notes = "Prefers darker rooms. Whispers often. Interacts rarely. Manifests to people standing alone in darkness."
+evidence = Array[StringName]([&"spirit_box", &"orbs", &"freezing"])
+roam_speed = 30.0
+hunt_speed = 76.0
+favorite_room_bias = 0.8
+darkness_preference = 0.9
+interaction_interval = Vector2(16, 28)
+door_weight = 0.5
+light_weight = 1.2
+power_trip_weight = 0.08
+manifestation_chance = 0.07
+darkness_manifest_bonus = 0.08
+whisper_interval = Vector2(14, 26)
+hunt_sanity_threshold = 45.0
+hunt_duration = Vector2(20, 28)
+hunt_power_trip_chance = 0.15
+spirit_box_chance = 0.5
+spirit_box_phrases = PackedStringArray("...here...", "...so cold...", "...behind you...", "...stay...", "...alone...")
+voice_pitch = 0.85

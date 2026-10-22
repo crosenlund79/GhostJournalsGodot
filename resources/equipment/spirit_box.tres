@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/equipment/spirit_box.tscn" id="1_7dy0h"]
+[ext_resource type="Script" path="res://scripts/equipment/equipment_definition.gd" id="2_8cybj"]
+
+[resource]
+script = ExtResource("2_8cybj")
+id = &"spirit_box"
+display_name = "Spirit Box"
+short_name = "Box"
+description = "Radio sweep the dead sometimes speak through."
+scene = ExtResource("1_7dy0h")
+use_hint = "toggle"

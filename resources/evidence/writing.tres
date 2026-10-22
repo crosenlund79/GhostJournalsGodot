@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="EvidenceDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="1_enve2"]
+
+[resource]
+script = ExtResource("1_enve2")
+id = &"writing"
+display_name = "Demonic Writing"
+description = "Symbols scrawled into an old notebook."
+discovery_requirements = "Old notebooks lie around the house. Check them again after activity nearby (E to examine)."
+short_name = "Writing"
+observation_note = "Something wrote in the notebook in the {room}."

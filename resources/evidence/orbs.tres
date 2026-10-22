@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EvidenceDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="1_bmehj"]
+
+[resource]
+script = ExtResource("1_bmehj")
+id = &"orbs"
+display_name = "Ghost Orbs"
+description = "Small drifting lights visible only on camera."
+discovery_requirements = "Record with the Video Camera in the room where the entity dwells."
+equipment_id = &"video_camera"
+short_name = "Orbs"
+observation_note = "Drifting orbs appeared on camera in the {room}."

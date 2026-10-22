@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="GameDatabase" format=3]
+
+[ext_resource type="Resource" path="res://resources/balance/default_balance.tres" id="1_2gctr"]
+[ext_resource type="Script" path="res://scripts/equipment/equipment_definition.gd" id="2_ty4xm"]
+[ext_resource type="Resource" path="res://resources/equipment/flashlight.tres" id="3_ecb8i"]
+[ext_resource type="Resource" path="res://resources/equipment/uv_flashlight.tres" id="4_77o06"]
+[ext_resource type="Resource" path="res://resources/equipment/emf_reader.tres" id="5_xhaaj"]
+[ext_resource type="Resource" path="res://resources/equipment/spirit_box.tres" id="6_w2ra4"]
+[ext_resource type="Resource" path="res://resources/equipment/video_camera.tres" id="7_aarns"]
+[ext_resource type="Resource" path="res://resources/equipment/thermometer.tres" id="8_e0gkm"]
+[ext_resource type="Resource" path="res://resources/equipment/ritual_kit.tres" id="9_jmm20"]
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="10_6uvye"]
+[ext_resource type="Resource" path="res://resources/evidence/emf_5.tres" id="11_faeod"]
+[ext_resource type="Resource" path="res://resources/evidence/uv_prints.tres" id="12_u8ny4"]
+[ext_resource type="Resource" path="res://resources/evidence/spirit_box.tres" id="13_y2cau"]
+[ext_resource type="Resource" path="res://resources/evidence/orbs.tres" id="14_cky2p"]
+[ext_resource type="Resource" path="res://resources/evidence/freezing.tres" id="15_lhbt0"]
+[ext_resource type="Resource" path="res://resources/evidence/writing.tres" id="16_cad01"]
+[ext_resource type="Script" path="res://scripts/ghost_ai/ghost_definition.gd" id="17_cw8ur"]
+[ext_resource type="Resource" path="res://resources/ghosts/whisperer.tres" id="18_kh3ut"]
+[ext_resource type="Resource" path="res://resources/ghosts/disturbed.tres" id="19_o0gvb"]
+[ext_resource type="Script" path="res://scripts/core/game_database.gd" id="20_5p7mi"]
+
+[resource]
+script = ExtResource("20_5p7mi")
+evidence = Array[ExtResource("10_6uvye")]([ExtResource("11_faeod"), ExtResource("12_u8ny4"), ExtResource("13_y2cau"), ExtResource("14_cky2p"), ExtResource("15_lhbt0"), ExtResource("16_cad01")])
+ghosts = Array[ExtResource("17_cw8ur")]([ExtResource("18_kh3ut"), ExtResource("19_o0gvb")])
+equipment = Array[ExtResource("2_ty4xm")]([ExtResource("3_ecb8i"), ExtResource("4_77o06"), ExtResource("5_xhaaj"), ExtResource("6_w2ra4"), ExtResource("7_aarns"), ExtResource("8_e0gkm"), ExtResource("9_jmm20")])
+balance = ExtResource("1_2gctr")

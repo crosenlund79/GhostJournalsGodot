@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EquipmentDefinition" format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/equipment/emf_reader.tscn" id="1_386ih"]
+[ext_resource type="Script" path="res://scripts/equipment/equipment_definition.gd" id="2_ml1dt"]
+
+[resource]
+script = ExtResource("2_ml1dt")
+id = &"emf_reader"
+display_name = "EMF Reader"
+short_name = "EMF"
+description = "Detects electromagnetic disturbances (levels 1-5)."
+scene = ExtResource("1_386ih")
+use_hint = "toggle"

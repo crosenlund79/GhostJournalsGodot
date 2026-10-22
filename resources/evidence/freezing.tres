@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EvidenceDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="1_fbmrx"]
+
+[resource]
+script = ExtResource("1_fbmrx")
+id = &"freezing"
+display_name = "Freezing Temperatures"
+description = "A room unnaturally cold, below 0 °C."
+discovery_requirements = "Take Thermometer readings room by room. Cold is common near the entity; freezing is not."
+equipment_id = &"thermometer"
+short_name = "Freeze"
+observation_note = "The thermometer read {detail} in the {room}."

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EvidenceDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="1_q2gnl"]
+
+[resource]
+script = ExtResource("1_q2gnl")
+id = &"spirit_box"
+display_name = "Spirit Box Response"
+description = "A voice answering through the radio sweep."
+discovery_requirements = "Switch on the Spirit Box close to the presence, in a room with its lights OFF, and wait."
+equipment_id = &"spirit_box"
+short_name = "Box"
+observation_note = "A voice answered through the Spirit Box in the {room}: \"{detail}\""

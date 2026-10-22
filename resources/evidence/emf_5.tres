@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EvidenceDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="1_datdk"]
+
+[resource]
+script = ExtResource("1_datdk")
+id = &"emf_5"
+display_name = "EMF Level 5"
+description = "An electromagnetic spike at the reader's maximum level."
+discovery_requirements = "Keep an EMF Reader switched on near places the ghost has just disturbed: doors, switches, knocked objects."
+equipment_id = &"emf_reader"
+short_name = "EMF 5"
+observation_note = "The EMF reader spiked to level 5 in the {room}."

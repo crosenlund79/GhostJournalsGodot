@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EvidenceDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/evidence/evidence_definition.gd" id="1_ojmvj"]
+
+[resource]
+script = ExtResource("1_ojmvj")
+id = &"uv_prints"
+display_name = "UV Handprints"
+description = "Fluorescent handprints left on surfaces the entity touched."
+discovery_requirements = "Sweep a UV Flashlight over doors and light switches after they have moved."
+equipment_id = &"uv_flashlight"
+short_name = "UV"
+observation_note = "Glowing handprints appeared under UV light in the {room}."
