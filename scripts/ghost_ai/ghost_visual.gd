@@ -3,7 +3,8 @@ extends Node2D
 ## Presentation of the ghost. Normally an indistinct dark silhouette; when it
 ## catches the player it briefly becomes a pale, detailed horror. Unshaded:
 ## visibility is decided by perception logic, not by lamps.
-## Replacements: res://assets/sprites/ghost/silhouette.png and horror.png.
+## Replacements: [member GhostDefinition.sprite] (an upright token), or
+## res://assets/sprites/ghost/silhouette.png and horror.png.
 
 var horror: bool = false
 var _time: float = 0.0
@@ -11,12 +12,31 @@ var _horror_scale: float = 1.0
 var _banish_t: float = -1.0
 var _tex_silhouette: Texture2D
 var _tex_horror: Texture2D
+## Upright token sprite (from the ghost definition); never rotated.
+var token: Texture2D
+var token_world_height: float = 50.0
+## Movement direction, used to mirror the token.
+var facing: Vector2 = Vector2.DOWN
+var _mirror: float = 1.0
 
 
 func _ready() -> void:
 	material = InkStyle.unshaded_material()
 	_tex_silhouette = InkStyle.try_texture("ghost/silhouette")
 	_tex_horror = InkStyle.try_texture("ghost/horror")
+	# The token is drawn much smaller than its source; mipmaps keep it clean.
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+
+
+func set_token(texture: Texture2D, world_height: float) -> void:
+	token = texture
+	token_world_height = world_height
+	queue_redraw()
+
+
+## True when the visual should not rotate with movement.
+func is_upright() -> bool:
+	return token != null and not horror
 
 
 func set_horror(value: bool) -> void:
@@ -51,6 +71,9 @@ func _draw() -> void:
 
 
 func _draw_silhouette() -> void:
+	if token:
+		_draw_token()
+		return
 	if _tex_silhouette:
 		draw_texture(_tex_silhouette, -_tex_silhouette.get_size() * 0.5)
 		return
@@ -81,6 +104,19 @@ func _draw_silhouette() -> void:
 	# Head.
 	draw_circle(Vector2(1.5, 0), 6.0, body)
 	draw_arc(Vector2(1.5, 0), 6.0, 0.0, TAU, 18, Color(InkStyle.GHOST_RIM, 0.4), InkStyle.DETAIL_WIDTH, true)
+
+
+func _draw_token() -> void:
+	# Turn to face the direction of travel (mirror), drifting and swaying gently.
+	if absf(facing.x) > 0.25:
+		_mirror = move_toward(_mirror, signf(facing.x), get_process_delta_time() * 6.0)
+	var height := token_world_height / maxf(scale.y, 0.01)
+	var size := token.get_size() * (height / token.get_size().y)
+	var bob := sin(_time * 2.2) * 1.2
+	var sway := sin(_time * 1.3) * 0.05
+	draw_set_transform(Vector2(0, bob - height * 0.12), sway, Vector2(_mirror if absf(_mirror) > 0.05 else 0.05, 1.0))
+	draw_texture_rect(token, Rect2(-size * 0.5, size), false)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _draw_horror() -> void:

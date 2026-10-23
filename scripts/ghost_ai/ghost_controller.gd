@@ -47,6 +47,9 @@ var ritual_provocation: float = 0.0
 var debug_reveal: bool = false
 ## Tutorial ghosts behave normally but a catch is never fatal.
 var harmless: bool = false
+var trail: SmokeTrail
+var _last_position := Vector2.ZERO
+var _trail_distance: float = 0.0
 var caught_player: bool = false
 var facing: Vector2 = Vector2.DOWN
 
@@ -83,6 +86,10 @@ func setup(def: GhostDefinition, game_balance: GameBalance, world_house: House, 
 	safe_room = safe
 	evidence_root = evidence_parent
 	visual.scale = Vector2.ONE * 1.45 * definition.silhouette_scale
+	if definition.sprite:
+		visual.set_token(definition.sprite, definition.sprite_world_height)
+	trail.enabled = definition.smoke_trail
+	trail.player = target_player
 	if seed_value >= 0:
 		rng.seed = seed_value
 	else:
@@ -114,6 +121,12 @@ func _ready() -> void:
 	visual.modulate.a = 0.0
 	visual.scale = Vector2.ONE * 1.45
 	add_child(visual)
+	# The trail lives beside the ghost (not under it) so puffs stay behind.
+	trail = SmokeTrail.new()
+	trail.name = "GhostSmokeTrail"
+	trail.z_index = z_index - 1
+	get_parent().add_child.call_deferred(trail)
+	_last_position = global_position
 
 
 func _choose_favorite_room() -> RoomData:
@@ -636,8 +649,29 @@ func _update_visibility(delta: float) -> void:
 	if state == State.BANISHED:
 		shown = visual.modulate.a
 	visual.modulate.a = move_toward(visual.modulate.a, shown, delta * (14.0 if state == State.HUNTING else 5.0))
-	visual.rotation = facing.angle()
+	visual.rotation = 0.0 if visual.is_upright() else facing.angle()
+	visual.facing = facing
+	_update_trail()
 	queue_redraw()
+
+
+## Emits smoke along the path while the ghost is visible and moving.
+func _update_trail() -> void:
+	var moved := global_position.distance_to(_last_position)
+	var from := _last_position
+	_last_position = global_position
+	# Teleports (e.g. appearing near the player) leave no trail.
+	if moved > TILE or trail == null or not trail.is_inside_tree():
+		return
+	if visual.modulate.a < 0.08 or moved < 0.05:
+		_trail_distance = 0.0
+		return
+	_trail_distance += moved
+	var back := (global_position - from).normalized()
+	while _trail_distance >= SmokeTrail.SPACING:
+		_trail_distance -= SmokeTrail.SPACING
+		var pos := global_position - back * (_trail_distance + 6.0) + Vector2(0, 12.0)
+		trail.emit_puff(pos, -back, visual.modulate.a)
 
 
 func _draw() -> void:

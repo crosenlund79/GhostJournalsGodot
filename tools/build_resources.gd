@@ -5,6 +5,9 @@ extends SceneTree
 ## edited in the Godot inspector; this script documents their initial values.
 
 
+const GHOST_TOKEN := "res://assets/ghost/GhostToken.png"
+
+
 func _initialize() -> void:
 	var evidence := _build_evidence()
 	var ghosts := _build_ghosts()
@@ -104,6 +107,7 @@ func _build_ghosts() -> Array[GhostDefinition]:
 	w.spirit_box_chance = 0.5
 	w.spirit_box_phrases = PackedStringArray(["...here...", "...so cold...", "...behind you...", "...stay...", "...alone..."])
 	w.voice_pitch = 0.85
+	w.sprite = load(GHOST_TOKEN)
 	_save(w, "res://resources/ghosts/whisperer.tres")
 	out.append(load("res://resources/ghosts/whisperer.tres"))
 
@@ -134,6 +138,7 @@ func _build_ghosts() -> Array[GhostDefinition]:
 	d.uv_print_chance = 0.7
 	d.writing_chance = 0.65
 	d.voice_pitch = 1.15
+	d.sprite = load(GHOST_TOKEN)
 	_save(d, "res://resources/ghosts/disturbed.tres")
 	out.append(load("res://resources/ghosts/disturbed.tres"))
 	return out

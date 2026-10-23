@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="GhostDefinition" format=3]
 
-[ext_resource type="Script" path="res://scripts/ghost_ai/ghost_definition.gd" id="1_nusxk"]
+[ext_resource type="Script" path="res://scripts/ghost_ai/ghost_definition.gd" id="1_lonet"]
+[ext_resource type="Texture2D" path="res://assets/ghost/GhostToken.png" id="2_14yno"]
 
 [resource]
-script = ExtResource("1_nusxk")
+script = ExtResource("1_lonet")
 id = &"whisperer"
 display_name = "The Whisperer"
 description = "A patient presence that lingers in dark rooms and speaks to those who sit alone with it."
@@ -26,3 +27,4 @@ hunt_power_trip_chance = 0.15
 spirit_box_chance = 0.5
 spirit_box_phrases = PackedStringArray("...here...", "...so cold...", "...behind you...", "...stay...", "...alone...")
 voice_pitch = 0.85
+sprite = ExtResource("2_14yno")

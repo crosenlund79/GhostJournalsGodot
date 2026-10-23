@@ -57,6 +57,32 @@ func _setup() -> void:
 	var p: Node = _inv.player
 	var house: Node = _inv.house
 	match _scenario:
+		"ghost":
+			var step := func(dir: Vector2) -> void:
+				_inv.ghost.global_position += dir
+			_shots = [[20, "", func() -> void:
+					_inv.electrical.set_power(true)
+					_inv.hunt_director.enabled = false
+					p.global_position = house.cell_to_world(Vector2i(4, 15))
+					p.aim_override = Vector2.RIGHT
+					_inv.ghost._state_timer = 0.0],
+				[25, "", func() -> void:
+					_inv.ghost.start_manifestation()
+					_inv.ghost._state_timer = 99.0
+					_inv.ghost.global_position = house.cell_to_world(Vector2i(14, 13))
+					_inv.ghost._last_position = _inv.ghost.global_position],
+			]
+			for i in range(26, 90):
+				_shots.append([i, "", step.bind(Vector2(-2.2, 0.9))])
+			_shots.append([90, "ghost_lit_trail"])
+			_shots.append([92, "", func() -> void:
+				_inv.electrical.set_power(false)
+				p.equipment.use_current()
+				_inv.ghost.global_position = house.cell_to_world(Vector2i(14, 17))
+				_inv.ghost._last_position = _inv.ghost.global_position])
+			for i in range(93, 150):
+				_shots.append([i, "", step.bind(Vector2(-2.0, -1.2))])
+			_shots.append([150, "ghost_dark_trail"])
 		"tutorial":
 			_shots = [[30, "tutorial_start"],
 				[35, "", func() -> void:

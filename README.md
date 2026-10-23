@@ -227,7 +227,11 @@ never through the renderer, so visuals can change freely.
 * *Ritual*: `RitualCircle` is self-contained; new rituals can be sibling `Interactable`s.
 
 **Replacing placeholder art and audio.** Colours and stroke widths live in `scripts/core/ink_style.gd`.
-Any visual looks for a PNG first and falls back to procedural drawing:
+The ghost uses the hand-drawn token `assets/ghost/GhostToken.png`, set per ghost type in its
+`GhostDefinition` (`sprite`, `sprite_world_height`). It is drawn upright like a game piece, mirrors to face its
+direction of travel and leaves a grey smoke trail while it is visible and moving (`smoke_trail`; see
+`scripts/ghost_ai/smoke_trail.gd`). The trail obeys the same perception rule as the ghost.
+Any other visual looks for a PNG first and falls back to procedural drawing:
 `assets/sprites/furniture/<type>.png`, `player/investigator.png` (facing +X), `ghost/silhouette.png`,
 `ghost/horror.png`, `equipment/<id>.png`, `environment/door.png`, `environment/fuse_box.png`.
 Sounds: drop `assets/audio/<name>.ogg` or `.wav` (names in `scripts/core/audio_manager.gd`, e.g. `whisper`,
@@ -239,8 +243,8 @@ Everything below was actually run in a Linux container with Godot 4.6 stable.
 
 | Kind | Command | Result |
 |---|---|---|
-| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 65 scripts, 0 failures |
-| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **168 passed, 0 failed** (6 consecutive runs) |
+| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 66 scripts, 0 failures |
+| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **177 passed, 0 failed** |
 | Scene smoke runs | `godot --headless --path . --quit-after 300` and the investigation scene directly | no errors |
 | Balance probe | `godot --headless --path . --fixed-fps 60 -s res://tests/balance_probe.gd` | see below |
 | Rendered frames | `xvfb-run godot --path . --rendering-driver opengl3 -s res://tests/capture.gd -- overview` | screenshots in this README |

@@ -53,6 +53,13 @@ extends Resource
 @export_group("Presentation")
 @export var voice_pitch: float = 1.0
 @export var silhouette_scale: float = 1.0
+## Hand-drawn token shown while the ghost is visible (drawn upright, facing the
+## viewer). Leave empty to use the procedural silhouette.
+@export var sprite: Texture2D
+## On-screen height of the token in world pixels (1 tile = 32 px).
+@export var sprite_world_height: float = 50.0
+## Leaves a trail of smoke behind it while visible and moving.
+@export var smoke_trail: bool = true
 
 
 func has_evidence(evidence_id: StringName) -> bool:

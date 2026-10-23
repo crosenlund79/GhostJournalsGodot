@@ -28,6 +28,7 @@ func _run() -> void:
 	await _test_evidence_is_exclusive()
 	await _test_spirit_box()
 	await _test_perception()
+	await _test_ghost_token_and_trail()
 	await _test_hunt_kills_player()
 	await _test_safe_room_protects()
 	await _test_exorcism()
@@ -371,6 +372,45 @@ func _test_perception() -> void:
 	check(g.state != 3, "manifestation ends")
 	check(p.sanity.value < 100.0, "manifestation costs sanity")
 	check(g.perceived_amount == 0.0, "roaming ghost is invisible")
+
+
+func _test_ghost_token_and_trail() -> void:
+	section("ghost token sprite & smoke trail")
+	var inv := await start_investigation(&"whisperer")
+	var p: Node = inv.player
+	var g: Node = inv.ghost
+	inv.hunt_director.enabled = false
+	inv.electrical.set_power(true)
+	check(g.definition.sprite != null and g.definition.sprite.resource_path == "res://assets/ghost/GhostToken.png", "ghost definition uses GhostToken.png")
+	check(g.visual.token == g.definition.sprite and g.visual.is_upright(), "visual draws the token upright")
+	check(g.trail != null and g.trail.is_inside_tree() and g.trail.get_parent() == g.get_parent(), "smoke trail lives beside the ghost")
+	# Invisible + moving: no smoke.
+	teleport(p, Vector2i(5, 15))
+	p.aim_override = Vector2.RIGHT
+	g._state_timer = 0.0
+	await frames(2)
+	g.global_position = p.global_position + Vector2(200, 0)
+	g._last_position = g.global_position
+	for i in 30:
+		g.global_position += Vector2(-1.5, 0)
+		await frames(1)
+	check(g.trail.puff_count() == 0, "no smoke while the ghost is invisible")
+	# Visible + moving (manifesting in front of the player): smoke appears.
+	g.start_manifestation()
+	g.global_position = p.global_position + Vector2(200, 0)
+	g._last_position = g.global_position
+	for i in 40:
+		g.global_position += Vector2(-1.5, 0)
+		await frames(1)
+	check(g.visual.modulate.a > 0.5, "manifesting ghost visible to the player")
+	check(g.trail.puff_count() > 5, "visible moving ghost leaves a smoke trail (%d puffs)" % g.trail.puff_count())
+	check(g.visual.rotation == 0.0, "token stays upright while moving")
+	var behind: bool = g.trail._puffs.back()["pos"].x > g.global_position.x - 4.0
+	check(behind, "smoke trails behind the direction of travel")
+	# Once it vanishes, no new puffs; the existing smoke fades away.
+	g._state_timer = 0.0
+	await seconds(2.0)
+	check(g.trail.puff_count() == 0, "smoke fades once the ghost vanishes")
 
 
 func _test_hunt_kills_player() -> void:

@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="GhostDefinition" format=3]
 
-[ext_resource type="Script" path="res://scripts/ghost_ai/ghost_definition.gd" id="1_q4b6r"]
+[ext_resource type="Script" path="res://scripts/ghost_ai/ghost_definition.gd" id="1_33cqk"]
+[ext_resource type="Texture2D" path="res://assets/ghost/GhostToken.png" id="2_k1dbi"]
 
 [resource]
-script = ExtResource("1_q4b6r")
+script = ExtResource("1_33cqk")
 id = &"disturbed"
 display_name = "The Disturbed"
 description = "A restless, violent thing that slams doors, kills the lights and resents company."
@@ -28,3 +29,4 @@ uv_print_chance = 0.7
 writing_chance = 0.65
 spirit_box_phrases = PackedStringArray("...here...", "...close...", "...leave...")
 voice_pitch = 1.15
+sprite = ExtResource("2_k1dbi")
