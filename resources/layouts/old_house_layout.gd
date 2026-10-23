@@ -16,15 +16,15 @@ static func data() -> Dictionary:
 	return {
 		"name": "Hollow Lane House",
 		"grid": [
-			"#################################           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#           ",
-			"#####D########D#######D######D##############",
+			"############################################",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#BBBBBBBBBB#WWWWWW#UUUUUUU#SSSSS#CCCCCCCCCC#",
+			"#####D########D#######D######D####D#########",
 			"#HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH#KKKKKKKKKK#",
 			"#HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHDKKKKKKKKKK#",
 			"########D#########HHHH###########KKKKKKKKKK#",
@@ -59,6 +59,8 @@ static func data() -> Dictionary:
 				"switch": [9, 12], "lights": [[8.5, 15.5]], "favorite": true},
 			"N": {"id": "dining_room", "name": "Dining Room", "floor": "wood", "light": 0.9, "temp": 19.0,
 				"switch": [23, 14], "lights": [[27.5, 15.5]], "favorite": true},
+			"C": {"id": "kids_room", "name": "Kids' Room", "floor": "carpet", "light": 0.7, "temp": 18.0,
+				"switch": [35, 7], "lights": [[38.0, 4.0]], "favorite": true},
 			"K": {"id": "kitchen", "name": "Kitchen", "floor": "tile", "light": 0.95, "temp": 19.0,
 				"switch": [33, 11], "lights": [[38.0, 14.0]], "favorite": true},
 		},
@@ -90,6 +92,9 @@ static func data() -> Dictionary:
 			["counter", 35, 9, 3, 1], ["stove", 38, 9, 1, 1], ["sink", 39, 9, 1, 1], ["counter", 40, 9, 2, 1],
 			["fridge", 42, 9, 1, 2], ["counter", 42, 12, 1, 3], ["island", 37, 13, 3, 2],
 			["kitchen_table", 34, 16, 2, 1], ["trash", 33, 18, 1, 1],
+			# Kids' room
+			["kids_bed", 40, 1, 2, 3], ["toy_chest", 33, 1, 2, 1], ["rug", 36, 3, 4, 3],
+			["bookshelf", 42, 5, 1, 2], ["toys", 33, 5, 1, 1], ["nightstand", 39, 1, 1, 1],
 			# Yard
 			["van", 4, 21, 7, 3], ["rack", 13, 21, 3, 1], ["rack", 13, 23, 3, 1],
 			["tree", 32, 22, 2, 2], ["tree", 38, 21, 2, 2], ["bush", 26, 24, 1, 1], ["bush", 2, 25, 1, 1],
@@ -100,6 +105,14 @@ static func data() -> Dictionary:
 		"exit_point": [11.5, 22.5],
 		"yard_light": [12.0, 22.0],
 		"rack_slots": [[13, 21], [14, 21], [15, 21], [13, 23], [14, 23], [15, 23]],
+		# Appliances sit on furniture: [type, x, y] in tile units (fractions allowed).
+		# No radio in the kids' room: the doll has to walk to one.
+		"appliances": [
+			["tv", 4.5, 12.5], ["tv", 10.5, 5.0],
+			["radio", 36.5, 9.5], ["radio", 31.5, 12.5], ["radio", 12.5, 9.5],
+		],
+		"doll_spot": [37.5, 4.0],
+		"kids_room": "C",
 		"book_spots": {
 			"B": [[7, 3]], "W": [[15, 3]], "U": [[23, 5]], "L": [[6, 13]], "N": [[30, 17]], "K": [[35, 12]],
 		},

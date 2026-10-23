@@ -17,6 +17,7 @@ var hunt_time_left: float = 0.0
 var cooldown: float = 0.0
 var enabled: bool = true
 var _check_timer: float = 0.0
+var _growl_timer: float = 0.0
 var _rng := RandomNumberGenerator.new()
 
 
@@ -39,6 +40,7 @@ func _process(delta: float) -> void:
 	if is_hunting:
 		if ghost.caught_player:
 			return
+		_update_hunt_audio(delta)
 		hunt_time_left -= delta
 		if hunt_time_left <= 0.0 or not ghost.is_active():
 			end_hunt()
@@ -73,6 +75,26 @@ func hunt_chance() -> float:
 	return clampf(chance * (1.0 + ghost.ritual_provocation), 0.0, 0.95)
 
 
+## The closer the hunter, the louder and faster the heartbeat; it growls and
+## rasps nearby, and the drone swells.
+func _update_hunt_audio(delta: float) -> void:
+	var dist := ghost.global_position.distance_to(player.global_position)
+	var near := 1.0 - clampf((dist - 40.0) / 460.0, 0.0, 1.0)
+	AudioManager.set_loop_volume(&"hunt", lerpf(-10.0, 3.0, near))
+	AudioManager.set_loop_pitch(&"hunt", lerpf(0.9, 1.75, near))
+	AudioManager.set_loop_volume(&"hunt_drone", lerpf(-8.0, 0.0, near))
+	_growl_timer -= delta
+	if _growl_timer <= 0.0:
+		_growl_timer = _rng.randf_range(1.4, 3.2)
+		AudioManager.play_at(&"growl", ghost.global_position, 4.0, _rng.randf_range(0.8, 1.1) * ghost.definition.voice_pitch, 650.0)
+
+
+func _stop_hunt_audio() -> void:
+	AudioManager.stop_loop(&"hunt")
+	AudioManager.stop_loop(&"hunt_drone")
+	AudioManager.set_hunt_mix(false)
+
+
 func should_start_hunt(roll: float) -> bool:
 	return roll < hunt_chance()
 
@@ -90,7 +112,10 @@ func start_hunt() -> void:
 	if electrical.is_powered() and _rng.randf() < def.hunt_power_trip_chance:
 		electrical.trip("hunt")
 	AudioManager.play(&"hunt_start", 0.0)
-	AudioManager.start_loop(&"hunt", &"heartbeat_loop", -2.0)
+	AudioManager.start_loop(&"hunt", &"heartbeat_loop", -6.0)
+	AudioManager.start_loop(&"hunt_drone", &"hunt_drone", -4.0)
+	AudioManager.set_hunt_mix(true)
+	_growl_timer = 1.0
 	player.sanity.apply_loss(balance.hunt_start_loss)
 	hunt_started.emit()
 
@@ -103,7 +128,7 @@ func end_hunt() -> void:
 	if house.front_door:
 		house.front_door.set_locked(false)
 	lighting.set_flicker(false)
-	AudioManager.stop_loop(&"hunt")
+	_stop_hunt_audio()
 	cooldown = balance.hunt_cooldown
 	hunt_ended.emit()
 
@@ -114,6 +139,6 @@ func shutdown() -> void:
 	if is_hunting:
 		is_hunting = false
 		lighting.set_flicker(false)
-		AudioManager.stop_loop(&"hunt")
+		_stop_hunt_audio()
 		if house.front_door:
 			house.front_door.set_locked(false)

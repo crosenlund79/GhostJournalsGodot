@@ -47,7 +47,8 @@ All bindings live in *Project Settings → Input Map* and can be rebound there.
 | W A S D | Move |
 | Mouse | Aim / facing (flashlight and camera follow it) |
 | Shift | Sprint (short stamina) |
-| E | Interact (doors, fuse box, switches, pickups, notebooks). Some actions are **hold E** |
+| E | Interact (doors, fuse box, switches, TVs, radios, pickups, notebooks). Some actions are **hold E** |
+| R | Secondary action where offered (e.g. pick the ritual circle back up) |
 | F | Use the held equipment (toggle / record / lay the ritual circle) |
 | G | Drop the held equipment |
 | 1 – 4 | Select equipment slot |
@@ -91,6 +92,28 @@ hunt** → the (optional) exorcism → leaving.
 * A live hint line reacts to the situation, for example "The lights in the Kitchen are on. Switch them off.", "The power is out…",
   or "Select it with its number key, then press F", so a step never stalls silently when the ghost undoes something.
 * **Tab** skips a step. The case file at the end is marked as a training investigation.
+
+## The house comes alive
+
+![TV static, the doll, the doll scare, the burned remnant](docs/screenshots/house_life.jpg)
+
+* **Kids' Room** (new room, off the kitchen). A rag **doll** (`assets/doll/doll.png`) sits on the rug.
+  Opening or closing the kids'-room door gives a 40 % chance (then a 40 s rest) that it wakes. Awake, it either
+  **runs at you**, a smaller non-lethal jump scare (the doll lunges at the screen and dissolves in light fog;
+  −6 composure), or **walks to the nearest radio** (never one in its own room), switches the music on and walks back
+  to its place. It opens doors on the way and you can hear its tiny footsteps.
+* **TVs** (living room, bedroom) need house power. Switched on they show only static: a crawling noise picture,
+  a hiss, and flickering light in classic TV hues that fills the room.
+* **Radios** (kitchen, dining room, hallway) run on batteries and play `audio/Where Did Everybody Go - alternate.mp3`
+  on repeat through a band-limited, overdriven "old radio" bus, with drifting volume, a warbling pitch and bursts of
+  static. The music plays until the player, the ghost or the doll turns it off.
+* The **ghost** switches TVs and radios on and off as one of its normal interactions (leaving EMF/UV evidence).
+* **Inner monologue**: each time composure falls past another 10 % mark, the investigator thinks aloud, from
+  "Something in this house knows I'm here…" to "It's thriving on my unease…". Crossing below the entity's
+  hunt threshold gives the clearest warning: "It can hunt me now."
+* **Hunt audio**: a dissonant drone, a heartbeat that gets louder and faster as the hunter closes in, growls near
+  the ghost, and muffled house ambience.
+* **Ritual circle**: press **R** to pick the kit back up; a scorched, warped pentagram stays burned into the floor.
 
 ## How to play (a short field guide)
 
@@ -251,8 +274,8 @@ Everything below was actually run in a Linux container with Godot 4.6 stable.
 
 | Kind | Command | Result |
 |---|---|---|
-| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 67 scripts, 0 failures |
-| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **181 passed, 0 failed** |
+| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 73 scripts, 0 failures |
+| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **226 passed, 0 failed** (3 consecutive runs) |
 | Scene smoke runs | `godot --headless --path . --quit-after 300` and the investigation scene directly | no errors |
 | Balance probe | `godot --headless --path . --fixed-fps 60 -s res://tests/balance_probe.gd` | see below |
 | Rendered frames | `xvfb-run godot --path . --rendering-driver opengl3 -s res://tests/capture.gd -- overview` | screenshots in this README |
@@ -268,7 +291,9 @@ and completes, and that every equipment step is completable through the ghost's 
 **both** ghost types without skipping (following the objective marker and live hints, as a player would).
 
 Balance probe (passive player standing in the ghost's room, power off, no flashlight — the harshest case):
-each evidence type became detectable within roughly 15–160 s; first hunts occurred at about 2–3.5 minutes.
+each evidence type became detectable within roughly 15–90 s. Composure drains 0.30 %/s in an unlit room
+(0.13 %/s with a flashlight, ×1.35 without power) and recovers 2 %/s in the warded safe room, so in this worst
+case the first hunt comes right after the 2-minute first-hunt grace period (120–145 s).
 
 **Not tested:** no human has played the game with a keyboard and mouse. Rendering was verified on Mesa
 llvmpipe (software OpenGL), not on Windows hardware; audio ran on a dummy driver, so the synthesized sounds

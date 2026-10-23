@@ -176,6 +176,23 @@ func _draw() -> void:
 			for i in 6:
 				var a := TAU * float(i) / 6.0
 				InkStyle.draw_detail(self, Vector2.ZERO, Vector2(cos(a), sin(a)) * r.size.x * 0.32, s + 2 + i, InkStyle.INK_FADED)
+		&"kids_bed":
+			InkStyle.draw_box(self, inner, InkStyle.fill(&"pale_wood"), s)
+			var m := inner.grow(-3.0)
+			InkStyle.draw_box(self, m, InkStyle.fill(&"linen"), s + 1)
+			InkStyle.draw_box(self, Rect2(m.position + Vector2(4, 3), Vector2(m.size.x - 8, 11)), InkStyle.PAPER, s + 2, InkStyle.DETAIL_WIDTH)
+			var fold := m.position.y + m.size.y * 0.45
+			InkStyle.draw_box(self, Rect2(Vector2(m.position.x, fold), Vector2(m.size.x, m.end.y - fold)), Color(0.36, 0.40, 0.50), s + 3, InkStyle.DETAIL_WIDTH)
+			for i in 3:
+				draw_circle(Vector2(m.position.x + 8 + i * 14, fold + 12), 2.0, InkStyle.PAPER_MUTED)
+		&"toy_chest":
+			InkStyle.draw_box(self, inner, InkStyle.fill(&"wood").lightened(0.1), s)
+			InkStyle.draw_detail(self, Vector2(inner.position.x + 2, inner.position.y + 7), Vector2(inner.end.x - 2, inner.position.y + 7), s + 1)
+			draw_circle(inner.get_center() + Vector2(0, 3), 2.0, InkStyle.INK)
+		&"toys":
+			InkStyle.draw_box(self, Rect2(Vector2(-9, -2), Vector2(8, 8)), InkStyle.RUST, s, InkStyle.DETAIL_WIDTH)
+			InkStyle.draw_oval(self, Vector2(5, -4), Vector2(5, 5), Color(0.36, 0.40, 0.50), s + 1, InkStyle.DETAIL_WIDTH)
+			InkStyle.draw_box(self, Rect2(Vector2(0, 3), Vector2(7, 5)), InkStyle.SICK_GREEN, s + 2, InkStyle.DETAIL_WIDTH)
 		&"bush":
 			InkStyle.draw_oval(self, Vector2.ZERO, r.size * 0.42, InkStyle.fill(&"plant").darkened(0.15), s)
 		_:

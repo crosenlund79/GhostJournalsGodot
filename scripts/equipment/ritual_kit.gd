@@ -24,7 +24,7 @@ func use() -> void:
 
 
 func get_hud_reading() -> String:
-	return "F — lay circle"
+	return "ready"
 
 
 func _draw_placeholder() -> void:

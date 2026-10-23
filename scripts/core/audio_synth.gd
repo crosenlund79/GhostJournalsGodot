@@ -33,6 +33,9 @@ static func build_library() -> Dictionary:
 	lib[&"ritual_loop"] = _ritual_loop()
 	lib[&"banish"] = _banish()
 	lib[&"switch"] = _click(0.05, 0.45)
+	lib[&"hunt_drone"] = _hunt_drone()
+	lib[&"growl"] = _growl()
+	lib[&"giggle"] = _giggle()
 	return lib
 
 
@@ -317,6 +320,55 @@ static func _ritual_loop() -> AudioStreamWAV:
 		var pulse := 0.6 + 0.4 * sin(TAU * t / seconds * 2.0)
 		buf[i] = (sin(TAU * 110.0 * t) * 0.3 + sin(TAU * 165.0 * t) * 0.18 + sin(TAU * 220.5 * t) * 0.08) * pulse
 	return to_stream(buf, true)
+
+
+## Dissonant low cluster with a slow tremolo; loops seamlessly (whole cycles).
+static func _hunt_drone() -> AudioStreamWAV:
+	var seconds := 4.0
+	var buf := _buffer(seconds)
+	var r := _rng(151)
+	var lp := 0.0
+	for i in buf.size():
+		var t := float(i) / RATE
+		lp += (r.randf_range(-1.0, 1.0) - lp) * 0.03
+		var cluster := sin(TAU * 41.0 * t) * 0.35 + sin(TAU * 43.5 * t) * 0.3 + sin(TAU * 58.25 * t) * 0.2 + sin(TAU * 87.0 * t) * 0.08
+		var tremolo := 0.7 + 0.3 * sin(TAU * 3.0 * t)
+		var screech := sin(TAU * 622.0 * t + sin(TAU * 0.5 * t) * 6.0) * 0.03
+		buf[i] = (cluster * tremolo + lp * 1.4 + screech) * 0.8
+	return to_stream(buf, true)
+
+
+## Breathy, rasping growl.
+static func _growl() -> AudioStreamWAV:
+	var seconds := 1.0
+	var buf := _buffer(seconds)
+	var r := _rng(161)
+	var lp := 0.0
+	var phase := 0.0
+	for i in buf.size():
+		var t := float(i) / RATE
+		var k := t / seconds
+		phase = fmod(phase + (75.0 - 25.0 * k) / RATE, 1.0)
+		lp += (r.randf_range(-1.0, 1.0) - lp) * 0.15
+		var rasp := lp * (0.5 + 0.5 * (phase * 2.0 - 1.0))
+		buf[i] = rasp * sin(PI * k) * 1.4
+	return to_stream(buf)
+
+
+## A child-like giggle: quick, falling, wavering notes.
+static func _giggle() -> AudioStreamWAV:
+	var seconds := 0.9
+	var buf := _buffer(seconds)
+	var phase := 0.0
+	for i in buf.size():
+		var t := float(i) / RATE
+		var note := int(t / 0.15)
+		var nt := fmod(t, 0.15)
+		var f := 1250.0 - note * 90.0 + sin(TAU * 28.0 * t) * 40.0
+		phase = fmod(phase + f / RATE, 1.0)
+		var env := sin(PI * minf(1.0, nt / 0.11)) if nt < 0.11 else 0.0
+		buf[i] = (sin(TAU * phase) * 0.6 + sin(TAU * phase * 2.0) * 0.2) * env * (1.0 - t / seconds) * 0.5
+	return to_stream(buf)
 
 
 static func _banish() -> AudioStreamWAV:

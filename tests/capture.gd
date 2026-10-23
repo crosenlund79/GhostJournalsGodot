@@ -57,6 +57,47 @@ func _setup() -> void:
 	var p: Node = _inv.player
 	var house: Node = _inv.house
 	match _scenario:
+		"features":
+			_shots = [[20, "", func() -> void:
+					_inv.hunt_director.enabled = false
+					_inv.electrical.set_power(true)
+					for r in house.room_list:
+						r.light_switch_on = false
+					house.refresh_lights()
+					house.appliances[0].set_on(true, &"player")
+					p.global_position = house.cell_to_world(Vector2i(8, 15))
+					p.aim_override = Vector2.UP],
+				[60, "tv_static_dark_room"],
+				[62, "", func() -> void:
+					house.get_room_by_id(&"kids_room").light_switch_on = true
+					house.refresh_lights()
+					p.global_position = house.cell_to_world(Vector2i(37, 6))
+					p.aim_override = Vector2.UP
+					p.sanity.set_value(69.0)],
+				[100, "kids_room_doll_monologue"],
+				[102, "", func() -> void:
+					_inv.doll.attacked.connect(func(_d: Node) -> void:
+						_shots.append([_frames + 4, "doll_scare_rush"])
+						_shots.append([_frames + 12, "doll_scare_peak"])
+						_shots.append([_frames + 30, "doll_scare_fog"]))
+					p.global_position = house.cell_to_world(Vector2i(36, 12))
+					p.aim_override = Vector2.UP
+					p.equipment.use_current()
+					_inv.doll.wake(&"attack")],
+				[130, "doll_running"],
+				[400, "", func() -> void:
+					p.global_position = house.cell_to_world(Vector2i(6, 14))
+					p.aim_override = Vector2.RIGHT
+					p.equipment.select(1)
+					p.equipment.add_item(_inv.database.get_equipment(&"ritual_kit"))
+					p.equipment.use_current()],
+				[410, "", func() -> void:
+					var c: Node = _inv.item_root.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("RitualCircle"))[0]
+					c.secondary_interact(p)
+					house.radios()[2].set_on(true, &"player")
+					p.global_position = house.cell_to_world(Vector2i(8, 13))],
+				[450, "remnant_and_radio"],
+			]
 		"scare":
 			_shots = [[20, "", func() -> void:
 					_inv.electrical.set_power(true)

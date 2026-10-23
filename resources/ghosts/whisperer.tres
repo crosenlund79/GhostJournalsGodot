@@ -20,6 +20,7 @@ interaction_interval = Vector2(16, 28)
 door_weight = 0.5
 light_weight = 1.2
 power_trip_weight = 0.08
+appliance_weight = 0.9
 manifestation_chance = 0.05
 darkness_manifest_bonus = 0.04
 whisper_interval = Vector2(14, 26)

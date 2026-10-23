@@ -31,6 +31,7 @@ var doors: Dictionary = {}  # Vector2i -> Door
 var front_door: Door
 var furniture_cells: Dictionary = {}  # Vector2i -> type
 var light_switches: Array[LightSwitch] = []
+var appliances: Array[Appliance] = []
 var astar := AStarGrid2D.new()
 var electrical: ElectricalSystem
 
@@ -61,6 +62,7 @@ func build(layout_data: Dictionary, electrical_system: ElectricalSystem) -> void
 	_build_room_lights()
 	_build_switches()
 	_build_navigation()
+	_build_appliances()
 	_link_neighbors()
 	if electrical:
 		electrical.power_changed.connect(func(_on: bool, _reason: String) -> void: refresh_lights())
@@ -272,6 +274,42 @@ func _build_switches() -> void:
 		sw.name = "Switch_%s" % room.id
 		object_root.add_child(sw)
 		light_switches.append(sw)
+
+
+func _build_appliances() -> void:
+	for entry in layout.get("appliances", []):
+		var kind: String = entry[0]
+		var a: Appliance
+		if kind == "tv":
+			a = TV.new()
+		else:
+			a = Radio.new()
+		a.house = self
+		var pos := Vector2(entry[1], entry[2]) * TILE
+		var cell := world_to_cell(pos)
+		a.room = get_room_at_cell(cell)
+		a.facing = _away_from_wall(cell)
+		a.position = pos
+		a.name = "%s_%s" % [kind.capitalize(), a.room.id if a.room else "x"]
+		object_root.add_child(a)
+		appliances.append(a)
+
+
+## Direction pointing away from the nearest wall next to a cell (into the room).
+func _away_from_wall(cell: Vector2i) -> Vector2:
+	for dir in [Vector2i.UP, Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN]:
+		for dist in [1, 2]:
+			if char_at(cell + dir * dist) == "#":
+				return -Vector2(dir)
+	return Vector2.DOWN
+
+
+func radios() -> Array[Radio]:
+	var out: Array[Radio] = []
+	for a in appliances:
+		if a is Radio:
+			out.append(a)
+	return out
 
 
 ## Pushes a wall-mounted object from a cell centre toward an adjacent wall.

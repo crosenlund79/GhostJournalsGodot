@@ -33,6 +33,12 @@ func _run() -> void:
 	await _test_safe_room_protects()
 	await _test_exorcism()
 	await _test_ui_flow()
+	await _test_composure_rates()
+	await _test_monologue()
+	await _test_appliances()
+	await _test_doll()
+	await _test_ritual_pickup()
+	await _test_hunt_audio()
 	await _test_tutorial()
 	await _test_tutorial_equipment_steps(&"whisperer")
 	await _test_tutorial_equipment_steps(&"disturbed")
@@ -141,8 +147,8 @@ func _test_layout() -> void:
 	var doors := 0
 	for row in grid:
 		doors += row.count("D") + row.count("F")
-	check(doors == 10, "10 doors (9 interior + front)")
-	check(data["rooms"].size() == 8, "8 named rooms")
+	check(doors == 11, "11 doors (10 interior + front)")
+	check(data["rooms"].size() == 9, "9 named rooms (incl. kids' room)")
 
 
 # --- Integration tests ----------------------------------------------------------
@@ -737,6 +743,206 @@ func _test_tutorial_equipment_steps(ghost_id: StringName) -> void:
 		inv.electrical.set_power(true)
 	await frames(3)
 	check(t.current_title() == "Practice hunt", "standing in the warded room completes its step")
+
+
+func _test_composure_rates() -> void:
+	section("composure rates")
+	var inv := await start_investigation(&"whisperer")
+	var p: Node = inv.player
+	inv.hunt_director.enabled = false
+	inv.ghost.global_position = inv.house.cell_to_world(Vector2i(38, 15))
+	teleport(p, Vector2i(5, 15))
+	await frames(2)
+	var dark: float = p.sanity.compute_rate()
+	check(dark <= -0.39, "unlit room, no power, no light drains fast (%.2f/s)" % dark)
+	p.equipment.use_current()
+	await frames(2)
+	var torch: float = p.sanity.compute_rate()
+	check(torch < 0.0 and torch > dark, "flashlight slows the drain (%.2f/s)" % torch)
+	inv.electrical.set_power(true)
+	await frames(2)
+	check(is_equal_approx(p.sanity.compute_rate(), 0.0), "lit room: no darkness drain")
+	teleport(p, Vector2i(29, 5))
+	await frames(2)
+	check(p.sanity.compute_rate() >= 2.0, "warded safe room recovers fast (%.2f/s)" % p.sanity.compute_rate())
+	p.sanity.set_value(40.0)
+	await seconds(10.0)
+	check(p.sanity.value >= 59.0, "10 s in the safe room recovers ~20%% (now %.0f)" % p.sanity.value)
+
+
+func _test_monologue() -> void:
+	section("inner monologue")
+	var inv := await start_investigation(&"whisperer")
+	var p: Node = inv.player
+	inv.hunt_director.enabled = false
+	var said: Array = []
+	inv.monologue.spoke.connect(func(t: String) -> void: said.append(t))
+	p.sanity.set_value(89.0)
+	check(said.size() == 1 and inv.hud.monologue_text().contains("watching"), "crossing 90% speaks")
+	p.sanity.set_value(85.0)
+	check(said.size() == 1, "no repeat within the same 10% band")
+	p.sanity.set_value(69.0)
+	check(said.size() == 2 and said[1].contains("losing composure"), "big drop speaks once, for the lowest mark")
+	p.sanity.set_value(59.0)
+	check(said[2].contains("thriving on my unease"), "lines escalate toward a hunt")
+	p.sanity.set_value(44.0)
+	check(said.back().contains("can hunt me now"), "crossing the ghost's hunt threshold warns of a hunt")
+	p.sanity.set_value(97.0)
+	p.sanity.set_value(88.0)
+	check(said.back().contains("watching"), "recovered marks re-arm")
+
+
+func _test_appliances() -> void:
+	section("TVs & radios")
+	var inv := await start_investigation(&"disturbed")
+	var p: Node = inv.player
+	var house: Node = inv.house
+	var tvs: Array = house.appliances.filter(func(a: Node) -> bool: return a.appliance_name == "TV")
+	var radios: Array = house.radios()
+	var kids: Object = house.get_room_by_id(&"kids_room")
+	check(kids != null and tvs.size() == 2 and radios.size() == 3, "kids' room, 2 TVs and 3 radios placed")
+	check(radios.all(func(r: Node) -> bool: return r.room != kids), "no radio in the kids' room")
+	var tv: Node = tvs[0]
+	check(not tv.set_on(true, &"player") and not tv.is_on, "TV needs power")
+	inv.electrical.set_power(true)
+	tv.interact(p)
+	await frames(5)
+	check(tv.is_on and tv.is_playing_static() and tv._light.enabled, "TV on: static sound and flickering light")
+	var hues := {}
+	for i in 30:
+		await frames(2)
+		hues[tv._light.color] = true
+	check(hues.size() >= 3, "TV light cycles through TV hues (%d seen)" % hues.size())
+	inv.electrical.trip("ghost")
+	await frames(2)
+	check(not tv.is_on, "power cut turns the TV off")
+	var radio: Node = radios[0]
+	radio.interact(p)
+	await frames(5)
+	check(radio.is_playing_music(), "radio plays music without house power")
+	var stream: AudioStream = radio._music.stream
+	check(stream is AudioStreamMP3 and stream.loop and stream.resource_path.contains("Where Did Everybody Go") or (stream is AudioStreamMP3 and stream.loop), "radio plays the looping MP3")
+	check(radio._music.bus == &"Radio" and AudioServer.get_bus_effect_count(AudioServer.get_bus_index(&"Radio")) >= 2, "music runs through the distorted Radio bus")
+	var vols := {}
+	var static_heard := false
+	for i in 40:
+		await seconds(0.5)
+		vols[snappedf(radio._music.volume_db, 1.0)] = true
+		static_heard = static_heard or radio._static.playing
+	check(vols.size() >= 3, "radio volume drifts (%d levels)" % vols.size())
+	check(static_heard, "static breaks in over the music")
+	check(radio.is_playing_music(), "music keeps playing (loops) until turned off")
+	radio.interact(p)
+	check(not radio.is_on and not radio._music.playing, "player turns the radio off")
+	# The ghost switches appliances as one of its interactions.
+	var g: Node = inv.ghost
+	var by_ghost := {"n": 0}
+	for a in house.appliances:
+		a.toggled.connect(func(_a: Node, _on: bool, by: StringName) -> void:
+			if by == &"ghost":
+				by_ghost["n"] += 1)
+	g.state = 1
+	g.global_position = house.cell_to_world(Vector2i(37, 12))
+	for i in 120:
+		g.perform_interaction()
+		g.global_position = house.cell_to_world(Vector2i(37, 12))
+	check(by_ghost["n"] > 0, "ghost turns TVs/radios on and off (%d times)" % by_ghost["n"])
+
+
+func _test_doll() -> void:
+	section("the doll")
+	var inv := await start_investigation(&"whisperer")
+	var p: Node = inv.player
+	var house: Node = inv.house
+	var doll: Node = inv.doll
+	inv.hunt_director.enabled = false
+	check(doll != null and house.get_room_at(doll.global_position).id == &"kids_room", "doll sits in the kids' room")
+	var kids_door: Node = house.door_at(Vector2i(34, 8))
+	doll.wake_chance = 1.0
+	kids_door.set_open(true, true)
+	check(not doll.is_awake(), "ghost using the door does not wake it")
+	teleport(p, Vector2i(34, 9))
+	kids_door.interact(p)
+	check(doll.is_awake(), "player opening the kids' room door can wake it")
+	# Attack.
+	await start_investigation(&"whisperer")
+	inv = current_scene
+	p = inv.player
+	doll = inv.doll
+	inv.hunt_director.enabled = false
+	teleport(p, Vector2i(38, 14))
+	var before: float = p.sanity.value
+	var hit := {"n": 0}
+	doll.attacked.connect(func(_d: Node) -> void: hit["n"] += 1)
+	doll.wake(&"attack")
+	for i in 20:
+		await seconds(0.5)
+		if hit["n"] > 0:
+			break
+	check(hit["n"] == 1, "doll runs at the investigator and reaches them")
+	check(inv.jump_scare.playing and inv.jump_scare.mini, "mini jump scare plays")
+	check(inv.jump_scare.texture.resource_path == "res://assets/doll/doll.png", "uses doll.png")
+	check(not p.is_dead and p.sanity.value < before, "not lethal, but costs composure")
+	var home: Vector2 = doll.home
+	for i in 40:
+		await seconds(0.5)
+		if not doll.is_awake():
+			break
+	check(not doll.is_awake() and doll.global_position.distance_to(home) < 1.0, "doll walks back to its place")
+	# Radio errand.
+	var started := {"radio": null}
+	doll.started_music.connect(func(_d: Node, r: Node) -> void: started["radio"] = r)
+	doll.cooldown = 0.0
+	doll.wake(&"radio")
+	for i in 120:
+		await seconds(0.5)
+		if started["radio"] != null and not doll.is_awake():
+			break
+	var r: Node = started["radio"]
+	check(r != null and r.is_on and r.is_playing_music(), "doll walks to a radio and turns the music on")
+	check(r != null and r.room.id != &"kids_room", "the radio is outside the kids' room")
+	check(not doll.is_awake() and doll.global_position.distance_to(home) < 1.0, "then walks back and sits")
+	check(r != null and r.is_playing_music(), "music keeps playing after the doll leaves")
+
+
+func _test_ritual_pickup() -> void:
+	section("ritual circle pickup")
+	var inv := await start_investigation(&"whisperer")
+	var p: Node = inv.player
+	inv.hunt_director.enabled = false
+	teleport(p, Vector2i(6, 14))
+	p.equipment.select(1)
+	p.equipment.add_item(inv.database.get_equipment(&"ritual_kit"))
+	p.equipment.use_current()
+	await frames(2)
+	var circle: Node = inv.item_root.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("RitualCircle"))[0]
+	check(circle.get_secondary_prompt(p) == "Pick up the ritual kit", "circle offers R — pick up")
+	var pos: Vector2 = circle.global_position
+	circle.secondary_interact(p)
+	await frames(2)
+	check(p.equipment.has_item(&"ritual_kit"), "kit returns to the inventory")
+	check(not is_instance_valid(circle) or circle.is_queued_for_deletion(), "circle removed")
+	var remnants: Array = root.get_tree().get_nodes_in_group(&"ritual_remnant")
+	check(remnants.size() == 1 and remnants[0].global_position.distance_to(pos) < 1.0, "a warped pentagram remains where it was")
+
+
+func _test_hunt_audio() -> void:
+	section("hunt audio")
+	var inv := await start_investigation(&"disturbed")
+	var amb := AudioServer.get_bus_index(&"Ambience")
+	inv.hunt_director.start_hunt()
+	await frames(5)
+	var am: Node = root.get_node("AudioManager")
+	check(am._loops.has(&"hunt_drone") and am._loops.has(&"hunt"), "hunt drone and heartbeat play")
+	check(AudioServer.is_bus_effect_enabled(amb, 0), "ambience is muffled during the hunt")
+	inv.ghost.global_position = inv.player.global_position + Vector2(60, 0)
+	await frames(3)
+	var near_pitch: float = am._loops[&"hunt"].pitch_scale
+	inv.ghost.global_position = inv.player.global_position + Vector2(600, 0)
+	await frames(3)
+	check(near_pitch > am._loops[&"hunt"].pitch_scale, "heartbeat quickens as the ghost gets close")
+	inv.hunt_director.end_hunt()
+	check(not am._loops.has(&"hunt_drone") and not AudioServer.is_bus_effect_enabled(amb, 0), "hunt audio stops afterwards")
 
 
 func _test_exit_and_results() -> void:

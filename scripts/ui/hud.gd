@@ -26,6 +26,8 @@ var _slot_labels: Array[Label] = []
 var _item_label: Label
 var _reading_label: Label
 var _ward_label: Label
+var _monologue: Label
+var _monologue_time: float = 0.0
 var _time: float = 0.0
 
 
@@ -40,6 +42,7 @@ func _ready() -> void:
 	_build_top()
 	_build_prompt()
 	_build_slots()
+	_build_monologue()
 
 
 func setup(target_player: Player, manager: InvestigationManager, safe: SafeRoomController, director: HuntDirector) -> void:
@@ -157,6 +160,28 @@ func _build_slots() -> void:
 		_slot_labels.append(label)
 
 
+func _build_monologue() -> void:
+	_monologue = UiTheme.make_label("", 19, Color(0.86, 0.82, 0.74))
+	var italic := UiTheme.serif_font()
+	(italic as SystemFont).font_italic = true
+	_monologue.add_theme_font_override("font", italic)
+	_monologue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_monologue.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	UiTheme.place(_monologue, Vector2(0.5, 1), Rect2(-380, -250, 760, 70))
+	_monologue.modulate.a = 0.0
+	_root.add_child(_monologue)
+
+
+## The investigator's thoughts, shown as a quiet italic line.
+func show_monologue(text: String) -> void:
+	_monologue.text = "“%s”" % text
+	_monologue_time = 6.0
+
+
+func monologue_text() -> String:
+	return _monologue.text if _monologue_time > 0.0 else ""
+
+
 func _refresh_slots() -> void:
 	if player == null:
 		return
@@ -201,6 +226,8 @@ func _process(delta: float) -> void:
 	_room_label.modulate.a = clampf(_room_fade, 0.0, 1.0)
 	_notice_time = maxf(0.0, _notice_time - delta)
 	_notice_label.modulate.a = clampf(_notice_time, 0.0, 1.0)
+	_monologue_time = maxf(0.0, _monologue_time - delta)
+	_monologue.modulate.a = clampf(minf(_monologue_time, 6.0 - _monologue_time) * 1.5, 0.0, 1.0)
 	# Composure.
 	var s := player.sanity.value
 	_composure_bar.value = s

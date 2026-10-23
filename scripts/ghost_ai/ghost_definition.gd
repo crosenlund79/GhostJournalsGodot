@@ -26,6 +26,8 @@ extends Resource
 @export var light_weight: float = 1.0
 @export var object_weight: float = 1.0
 @export var power_trip_weight: float = 0.1
+## Switching TVs and radios on or off.
+@export var appliance_weight: float = 1.0
 ## Chance per manifestation check (every few seconds while the player is near).
 @export var manifestation_chance: float = 0.1
 ## Extra manifestation chance when the player stands in darkness.

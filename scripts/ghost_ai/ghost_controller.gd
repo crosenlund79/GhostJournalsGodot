@@ -333,6 +333,10 @@ func perform_interaction() -> StringName:
 	if book and definition.has_evidence(&"writing"):
 		kinds.append(&"writing")
 		weights.append(2.0)
+	var appliance := _nearest_appliance()
+	if appliance:
+		kinds.append(&"appliance")
+		weights.append(definition.appliance_weight)
 	if house.is_power_on():
 		kinds.append(&"power")
 		weights.append(definition.power_trip_weight)
@@ -359,6 +363,10 @@ func perform_interaction() -> StringName:
 				book.write()
 			pos = book.global_position
 			_leave_evidence_at(pos, false)
+		&"appliance":
+			appliance.toggle(&"ghost")
+			pos = appliance.global_position
+			_leave_evidence_at(pos, true)
 		&"power":
 			electrical.trip("ghost")
 			_leave_evidence_at(pos, false)
@@ -381,6 +389,20 @@ func _weighted_pick(kinds: Array[StringName], weights: Array[float]) -> StringNa
 		if roll <= 0.0:
 			return kinds[i]
 	return kinds.back()
+
+
+func _nearest_appliance() -> Appliance:
+	var best: Appliance = null
+	var best_d := 5.0 * TILE
+	for node in get_tree().get_nodes_in_group(&"appliance"):
+		var a := node as Appliance
+		if a == null:
+			continue
+		var d := a.global_position.distance_to(global_position)
+		if d < best_d:
+			best_d = d
+			best = a
+	return best
 
 
 func _nearest_unwritten_book() -> WritingBook:

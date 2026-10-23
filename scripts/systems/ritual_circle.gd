@@ -73,6 +73,29 @@ func get_prompt(_actor: Node) -> String:
 	return "Perform the Rite — banish \"%s\"" % named.display_name
 
 
+func get_secondary_prompt(_actor: Node) -> String:
+	return "" if consumed else "Pick up the ritual kit"
+
+
+## Takes the kit back. The ground keeps a scorched, warped trace of the circle.
+func secondary_interact(actor: Node) -> void:
+	var player := actor as Player
+	if player == null or consumed:
+		return
+	if not player.equipment.has_free_slot():
+		investigation.notify("Your hands are full. Drop something first (G).", &"info")
+		return
+	var db := GameManager.database
+	player.equipment.add_item(db.get_equipment(&"ritual_kit"))
+	var remnant := RitualRemnant.new()
+	remnant.position = position
+	get_parent().add_child(remnant)
+	AudioManager.play(&"ui_page", -6.0, 0.7)
+	investigation.notify("You gather the candles and salt. A warped mark stays burned into the floor.", &"info")
+	_stop_holding()
+	queue_free()
+
+
 func ghost_in_circle() -> bool:
 	return ghost != null and ghost.is_active() and ghost.global_position.distance_to(global_position) <= RADIUS
 

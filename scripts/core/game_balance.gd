@@ -5,16 +5,16 @@ extends Resource
 
 @export_group("Sanity drain (per second)")
 ## Standing in an unlit room with no handheld light.
-@export var darkness_drain: float = 0.12
+@export var darkness_drain: float = 0.30
 ## Standing in an unlit room with a flashlight on (partial protection).
-@export var flashlight_darkness_drain: float = 0.05
+@export var flashlight_darkness_drain: float = 0.13
 ## Multiplier applied to darkness drain while the house has no power.
 @export var power_out_multiplier: float = 1.35
 ## Drain while the ghost is close (not hunting).
 @export var ghost_proximity_drain: float = 0.15
 @export var ghost_proximity_radius: float = 110.0
 ## Recovery while inside a protected safe room.
-@export var safe_room_recovery: float = 0.4
+@export var safe_room_recovery: float = 2.0
 
 @export_group("Sanity shocks")
 @export var manifestation_seen_loss: float = 7.0
@@ -22,6 +22,8 @@ extends Resource
 @export var event_witness_loss: float = 2.0
 @export var hunt_start_loss: float = 4.0
 @export var spirit_box_response_loss: float = 3.0
+## The doll's mini jump scare (not lethal).
+@export var doll_scare_loss: float = 6.0
 
 @export_group("Pacing")
 ## Seconds after arrival during which the ghost stays dormant.

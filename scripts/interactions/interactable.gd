@@ -59,6 +59,15 @@ func on_hold_cancelled(_actor: Node) -> void:
 	pass
 
 
+## Optional second action on the R key ("" = none).
+func get_secondary_prompt(_actor: Node) -> String:
+	return ""
+
+
+func secondary_interact(_actor: Node) -> void:
+	pass
+
+
 ## Optional extra status line shown under the prompt during a hold.
 func get_hold_status(_actor: Node) -> String:
 	return ""

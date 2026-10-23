@@ -4,7 +4,9 @@ extends Node
 ## Sounds are referenced by name. A file at res://assets/audio/<name>.ogg or
 ## .wav overrides the procedurally generated placeholder of the same name.
 
-const BUSES: Array[StringName] = [&"Ambience", &"Equipment", &"Ghost", &"Player", &"UI", &"Music"]
+const BUSES: Array[StringName] = [&"Ambience", &"Equipment", &"Ghost", &"Player", &"UI", &"Music", &"Radio"]
+## The old radio's song (looped while a radio is on).
+const RADIO_MUSIC_PATH := "res://audio/Where Did Everybody Go - alternate.mp3"
 
 ## Default category for each sound name.
 const CATEGORY := {
@@ -16,6 +18,7 @@ const CATEGORY := {
 	&"power_down": &"Ambience", &"power_up": &"Ambience",
 	&"death": &"Ghost", &"ui_click": &"UI", &"ui_page": &"UI", &"evidence_cue": &"UI",
 	&"ambience_loop": &"Ambience", &"ritual_loop": &"Music",
+	&"hunt_drone": &"Music", &"growl": &"Ghost", &"giggle": &"Ghost",
 }
 
 var _streams: Dictionary = {}
@@ -44,6 +47,44 @@ func _setup_buses() -> void:
 		AudioServer.set_bus_send(idx, &"Master")
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Ambience"), -6.0)
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"Music"), -4.0)
+	# Old-radio colour: band-limited, slightly overdriven.
+	var radio := AudioServer.get_bus_index(&"Radio")
+	if AudioServer.get_bus_effect_count(radio) == 0:
+		var band := AudioEffectBandPassFilter.new()
+		band.cutoff_hz = 1400.0
+		band.resonance = 0.6
+		AudioServer.add_bus_effect(radio, band)
+		var dist := AudioEffectDistortion.new()
+		dist.mode = AudioEffectDistortion.MODE_OVERDRIVE
+		dist.drive = 0.35
+		dist.pre_gain = 4.0
+		dist.post_gain = -3.0
+		AudioServer.add_bus_effect(radio, dist)
+	# Hunt mix: the house's ambience is muffled while something hunts.
+	var amb := AudioServer.get_bus_index(&"Ambience")
+	if AudioServer.get_bus_effect_count(amb) == 0:
+		var lp := AudioEffectLowPassFilter.new()
+		lp.cutoff_hz = 600.0
+		AudioServer.add_bus_effect(amb, lp)
+		AudioServer.set_bus_effect_enabled(amb, 0, false)
+
+
+## Muffles ambience (and ducks it) during hunts.
+func set_hunt_mix(on: bool) -> void:
+	var amb := AudioServer.get_bus_index(&"Ambience")
+	AudioServer.set_bus_effect_enabled(amb, 0, on)
+	AudioServer.set_bus_volume_db(amb, -11.0 if on else -6.0)
+
+
+## The radio song as a looping stream (null if the file is missing).
+func radio_music() -> AudioStream:
+	if not _streams.has(&"radio_music"):
+		var stream: AudioStream = load(RADIO_MUSIC_PATH) if ResourceLoader.exists(RADIO_MUSIC_PATH) else null
+		if stream is AudioStreamMP3:
+			stream = (stream as AudioStreamMP3).duplicate()
+			(stream as AudioStreamMP3).loop = true
+		_streams[&"radio_music"] = stream
+	return _streams[&"radio_music"]
 
 
 func get_stream(sound_name: StringName) -> AudioStream:
@@ -71,12 +112,13 @@ func play(sound_name: StringName, volume_db: float = 0.0, pitch: float = 1.0) ->
 
 
 ## Plays an arbitrary stream once (e.g. a ghost's own catch scream).
-func play_stream(stream: AudioStream, volume_db: float = 0.0, bus: StringName = &"Ghost") -> AudioStreamPlayer:
+func play_stream(stream: AudioStream, volume_db: float = 0.0, bus: StringName = &"Ghost", pitch: float = 1.0) -> AudioStreamPlayer:
 	if stream == null:
 		return null
 	var p := AudioStreamPlayer.new()
 	p.stream = stream
 	p.volume_db = volume_db
+	p.pitch_scale = pitch
 	p.bus = bus
 	add_child(p)
 	p.finished.connect(p.queue_free)
@@ -128,6 +170,11 @@ func start_loop(key: StringName, sound_name: StringName, volume_db: float = 0.0,
 func set_loop_volume(key: StringName, volume_db: float) -> void:
 	if _loops.has(key) and is_instance_valid(_loops[key]):
 		(_loops[key] as AudioStreamPlayer).volume_db = volume_db
+
+
+func set_loop_pitch(key: StringName, pitch: float) -> void:
+	if _loops.has(key) and is_instance_valid(_loops[key]):
+		(_loops[key] as AudioStreamPlayer).pitch_scale = pitch
 
 
 func stop_loop(key: StringName) -> void:

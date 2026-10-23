@@ -27,6 +27,9 @@ func _physics_process(delta: float) -> void:
 		cancel_hold()
 		focused = null
 		return
+	if not holding and Input.is_action_just_pressed(&"interact_alt") and focused.get_secondary_prompt(actor) != "":
+		focused.secondary_interact(actor)
+		return
 	if Input.is_action_just_pressed(&"interact"):
 		if focused.hold_duration <= 0.0:
 			focused.interact(actor)
@@ -114,7 +117,11 @@ func get_prompt_text() -> String:
 	if p == "":
 		return ""
 	var verb := "Hold E" if focused.hold_duration > 0.0 else "E"
-	return "%s — %s" % [verb, p]
+	var text := "%s — %s" % [verb, p]
+	var alt := focused.get_secondary_prompt(actor)
+	if alt != "":
+		text += "      R — %s" % alt
+	return text
 
 
 func get_hold_status() -> String:

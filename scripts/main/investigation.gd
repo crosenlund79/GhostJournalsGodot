@@ -49,6 +49,8 @@ var camera_overlay: CameraOverlay
 var debug_overlay: DebugOverlay
 var tutorial: TutorialDirector
 var jump_scare: JumpScare
+var doll: Doll
+var monologue: InnerMonologue
 var _release_timer: float = -1.0
 
 var _rng := RandomNumberGenerator.new()
@@ -184,6 +186,7 @@ func _build_world() -> void:
 		spawn_pickup(database.get_equipment(RACK_EQUIPMENT[i]), house.cell_to_world(cell))
 
 	_spawn_books(layout)
+	_spawn_doll(layout)
 
 
 func _spawn_books(layout: Dictionary) -> void:
@@ -206,6 +209,17 @@ func _spawn_books(layout: Dictionary) -> void:
 		book.position = house.cell_to_world(Vector2i(p[0], p[1]))
 		item_root.add_child(book)
 		books.append(book)
+
+
+func _spawn_doll(layout: Dictionary) -> void:
+	if not layout.has("doll_spot"):
+		return
+	var spot: Array = layout["doll_spot"]
+	doll = Doll.new()
+	doll.name = "Doll"
+	doll.position = Vector2(spot[0], spot[1]) * TILE
+	item_root.add_child(doll)
+	doll.setup(house, player, safe_room, house.rooms.get(layout.get("kids_room", "")))
 
 
 func _build_ui() -> void:
@@ -239,6 +253,15 @@ func _build_ui() -> void:
 
 
 func _connect_signals() -> void:
+	monologue = InnerMonologue.new()
+	monologue.name = "InnerMonologue"
+	add_child(monologue)
+	monologue.setup(player, ghost_definition.hunt_sanity_threshold)
+	monologue.spoke.connect(hud.show_monologue)
+	if doll:
+		doll.attacked.connect(_on_doll_attack)
+		doll.started_music.connect(func(_d: Doll, r: Radio) -> void:
+			manager.add_field_note("Music started playing from a radio in the %s. Nobody was near it." % (r.room.display_name if r.room else "house")))
 	player.drop_requested.connect(spawn_pickup)
 	ghost.player_caught.connect(_on_player_caught)
 	exit_point.exit_requested.connect(end_investigation.bind(true))
@@ -309,6 +332,8 @@ func _on_player_caught() -> void:
 	journal.close()
 	player.die()
 	AudioManager.stop_loop(&"hunt")
+	AudioManager.stop_loop(&"hunt_drone")
+	AudioManager.set_hunt_mix(false)
 	var scare := _play_catch_scare(2.0)
 	# Show the death screen while the fog hides everything; the fog clears onto it.
 	_death_timer = (JumpScare.RUSH_TIME + JumpScare.HOLD_TIME + JumpScare.FOG_TIME * 0.6) if scare else 1.8
@@ -331,6 +356,23 @@ func _play_catch_scare(volume_db: float) -> bool:
 	var from_screen := get_viewport().get_canvas_transform() * ghost.global_position
 	jump_scare.play(def.caught_sprite, from_screen, to_screen)
 	return true
+
+
+## The doll reaches the investigator: a smaller, non-lethal jump scare.
+func _on_doll_attack(attacker: Doll) -> void:
+	if player.is_dead or manager.finished or jump_scare.playing:
+		return
+	var scream := ghost_definition.caught_sound
+	if scream:
+		AudioManager.play_stream(scream, -9.0, &"Ghost", 1.45)
+	else:
+		AudioManager.play(&"giggle", 0.0, 0.8)
+	var splash: Texture2D = attacker._texture
+	if splash:
+		var xf := get_viewport().get_canvas_transform()
+		jump_scare.play(splash, xf * attacker.global_position, xf * player.global_position, true)
+	player.sanity.apply_loss(balance.doll_scare_loss)
+	manager.add_field_note("The doll from the kids' room ran at me.")
 
 
 ## Tutorial catch: the full scare, then the ghost lets go and the hunt ends.
