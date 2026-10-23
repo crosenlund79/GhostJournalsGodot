@@ -60,6 +60,11 @@ extends Resource
 @export var sprite_world_height: float = 50.0
 ## Leaves a trail of smoke behind it while visible and moving.
 @export var smoke_trail: bool = true
+## Jump scare when it catches the investigator: a splash image that lunges
+## from the ghost to the screen, and the sound played with it. Without a
+## splash image the procedural "horror face" is shown instead.
+@export var caught_sprite: Texture2D
+@export var caught_sound: AudioStream
 
 
 func has_evidence(evidence_id: StringName) -> bool:

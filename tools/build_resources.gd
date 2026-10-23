@@ -6,6 +6,8 @@ extends SceneTree
 
 
 const GHOST_TOKEN := "res://assets/ghost/GhostToken.png"
+const GHOST_CAUGHT := "res://assets/ghost/Ghost_caught_player.png"
+const GHOST_SCREAM := "res://audio/Ghost_caught_player_scream.wav"
 
 
 func _initialize() -> void:
@@ -108,6 +110,8 @@ func _build_ghosts() -> Array[GhostDefinition]:
 	w.spirit_box_phrases = PackedStringArray(["...here...", "...so cold...", "...behind you...", "...stay...", "...alone..."])
 	w.voice_pitch = 0.85
 	w.sprite = load(GHOST_TOKEN)
+	w.caught_sprite = load(GHOST_CAUGHT)
+	w.caught_sound = load(GHOST_SCREAM)
 	_save(w, "res://resources/ghosts/whisperer.tres")
 	out.append(load("res://resources/ghosts/whisperer.tres"))
 
@@ -139,6 +143,8 @@ func _build_ghosts() -> Array[GhostDefinition]:
 	d.writing_chance = 0.65
 	d.voice_pitch = 1.15
 	d.sprite = load(GHOST_TOKEN)
+	d.caught_sprite = load(GHOST_CAUGHT)
+	d.caught_sound = load(GHOST_SCREAM)
 	_save(d, "res://resources/ghosts/disturbed.tres")
 	out.append(load("res://resources/ghosts/disturbed.tres"))
 	return out

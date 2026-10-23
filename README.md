@@ -231,6 +231,14 @@ The ghost uses the hand-drawn token `assets/ghost/GhostToken.png`, set per ghost
 `GhostDefinition` (`sprite`, `sprite_world_height`). It is drawn upright like a game piece, mirrors to face its
 direction of travel and leaves a grey smoke trail while it is visible and moving (`smoke_trail`; see
 `scripts/ghost_ai/smoke_trail.gd`). The trail obeys the same perception rule as the ghost.
+When the ghost catches the investigator, a **jump scare** plays: `audio/Ghost_caught_player_scream.wav` and
+the splash `assets/ghost/Ghost_caught_player.png`, which lunges from the ghost's position toward the
+investigator, accelerating until it covers the screen, shudders, then dissolves into fog that clears onto the
+death screen (in the tutorial, the hunt simply ends). Both are per-ghost data (`caught_sprite`, `caught_sound`);
+the effect lives in `scripts/ui/jump_scare.gd`.
+
+![Jump scare sequence](docs/screenshots/jump_scare_sequence.jpg)
+
 Any other visual looks for a PNG first and falls back to procedural drawing:
 `assets/sprites/furniture/<type>.png`, `player/investigator.png` (facing +X), `ghost/silhouette.png`,
 `ghost/horror.png`, `equipment/<id>.png`, `environment/door.png`, `environment/fuse_box.png`.
@@ -243,8 +251,8 @@ Everything below was actually run in a Linux container with Godot 4.6 stable.
 
 | Kind | Command | Result |
 |---|---|---|
-| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 66 scripts, 0 failures |
-| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **177 passed, 0 failed** |
+| Script compilation | `godot --headless --path . -s res://tests/check_scripts.gd` | 67 scripts, 0 failures |
+| Automated tests (unit + headless integration) | `godot --headless --path . --fixed-fps 60 -s res://tests/run_tests.gd` | **181 passed, 0 failed** |
 | Scene smoke runs | `godot --headless --path . --quit-after 300` and the investigation scene directly | no errors |
 | Balance probe | `godot --headless --path . --fixed-fps 60 -s res://tests/balance_probe.gd` | see below |
 | Rendered frames | `xvfb-run godot --path . --rendering-driver opengl3 -s res://tests/capture.gd -- overview` | screenshots in this README |

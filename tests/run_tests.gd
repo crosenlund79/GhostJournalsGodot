@@ -432,7 +432,13 @@ func _test_hunt_kills_player() -> void:
 			died = true
 			break
 	check(died, "ghost reaches a player standing in the open")
-	check(g.caught_player and g.visual.horror, "catch triggers the horror transformation")
+	check(g.caught_player and inv.jump_scare.playing, "catch triggers the jump scare")
+	check(inv.jump_scare.texture.resource_path == "res://assets/ghost/Ghost_caught_player.png", "jump scare uses Ghost_caught_player.png")
+	check(g.definition.caught_sound.resource_path == "res://audio/Ghost_caught_player_scream.wav", "catch plays Ghost_caught_player_scream.wav")
+	var scream_playing := AudioManager_has_stream(g.definition.caught_sound)
+	check(scream_playing, "scream is playing")
+	await seconds(JumpScare_rush() + 0.05)
+	check(inv.jump_scare.is_covering(), "splash covers the screen after the lunge")
 	await seconds(2.5)
 	check(inv.manager.finished and inv.manager.results["survived"] == false, "death ends the investigation")
 	check(inv.death_screen.visible, "death screen shown")
@@ -560,6 +566,17 @@ func _test_ui_flow() -> void:
 	await frames(2)
 	check(inv.hud._item_label.text == "Flashlight" and inv.hud._reading_label.text.begins_with("beam on"), "HUD shows held item and state")
 	check(not GameManager_debug(), "debug mode off by default")
+
+
+func AudioManager_has_stream(stream: AudioStream) -> bool:
+	for c in root.get_node("AudioManager").get_children():
+		if c is AudioStreamPlayer and c.stream == stream and c.playing:
+			return true
+	return false
+
+
+func JumpScare_rush() -> float:
+	return load("res://scripts/ui/jump_scare.gd").RUSH_TIME
 
 
 func GameManager_debug() -> bool:

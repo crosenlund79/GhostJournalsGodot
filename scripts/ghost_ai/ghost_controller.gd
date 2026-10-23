@@ -604,7 +604,9 @@ func _search() -> void:
 
 func _catch_player() -> void:
 	caught_player = true
-	visual.set_horror(true)
+	# With a splash image the jump scare plays on screen instead.
+	if definition.caught_sprite == null:
+		visual.set_horror(true)
 	if player:
 		facing = (player.global_position - global_position).normalized()
 	player_caught.emit()

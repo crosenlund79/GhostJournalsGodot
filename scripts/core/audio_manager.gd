@@ -70,6 +70,20 @@ func play(sound_name: StringName, volume_db: float = 0.0, pitch: float = 1.0) ->
 	return p
 
 
+## Plays an arbitrary stream once (e.g. a ghost's own catch scream).
+func play_stream(stream: AudioStream, volume_db: float = 0.0, bus: StringName = &"Ghost") -> AudioStreamPlayer:
+	if stream == null:
+		return null
+	var p := AudioStreamPlayer.new()
+	p.stream = stream
+	p.volume_db = volume_db
+	p.bus = bus
+	add_child(p)
+	p.finished.connect(p.queue_free)
+	p.play()
+	return p
+
+
 ## Positional one-shot in the current scene (ghost activity, doors...).
 func play_at(sound_name: StringName, world_position: Vector2, volume_db: float = 0.0,
 		pitch: float = 1.0, max_distance: float = 720.0) -> AudioStreamPlayer2D:

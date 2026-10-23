@@ -48,6 +48,7 @@ var results_screen: ResultsScreen
 var camera_overlay: CameraOverlay
 var debug_overlay: DebugOverlay
 var tutorial: TutorialDirector
+var jump_scare: JumpScare
 var _release_timer: float = -1.0
 
 var _rng := RandomNumberGenerator.new()
@@ -225,6 +226,9 @@ func _build_ui() -> void:
 	death_screen = DeathScreen.new()
 	death_screen.name = "DeathScreen"
 	add_child(death_screen)
+	jump_scare = JumpScare.new()
+	jump_scare.name = "JumpScare"
+	add_child(jump_scare)
 	results_screen = ResultsScreen.new()
 	results_screen.name = "ResultsScreen"
 	add_child(results_screen)
@@ -305,18 +309,36 @@ func _on_player_caught() -> void:
 	journal.close()
 	player.die()
 	AudioManager.stop_loop(&"hunt")
-	AudioManager.play(&"death", 2.0)
-	var tween := create_tween()
-	tween.tween_property(player.camera, "zoom", Vector2(3.4, 3.4), 0.5).set_trans(Tween.TRANS_EXPO)
-	_death_timer = 1.8
+	var scare := _play_catch_scare(2.0)
+	# Show the death screen while the fog hides everything; the fog clears onto it.
+	_death_timer = (JumpScare.RUSH_TIME + JumpScare.HOLD_TIME + JumpScare.FOG_TIME * 0.6) if scare else 1.8
+	if not scare:
+		var tween := create_tween()
+		tween.tween_property(player.camera, "zoom", Vector2(3.4, 3.4), 0.5).set_trans(Tween.TRANS_EXPO)
+
+
+## Scream + splash lunge from the ghost toward the investigator. Returns
+## false when the ghost has no splash image (fallback: horror face + synth scream).
+func _play_catch_scare(volume_db: float) -> bool:
+	var def := ghost.definition
+	if def.caught_sound:
+		AudioManager.play_stream(def.caught_sound, volume_db)
+	else:
+		AudioManager.play(&"death", volume_db)
+	if def.caught_sprite == null:
+		return false
+	var to_screen := get_viewport().get_canvas_transform() * player.global_position
+	var from_screen := get_viewport().get_canvas_transform() * ghost.global_position
+	jump_scare.play(def.caught_sprite, from_screen, to_screen)
+	return true
 
 
 ## Tutorial catch: the full scare, then the ghost lets go and the hunt ends.
 func _harmless_catch() -> void:
-	AudioManager.play(&"death", -6.0)
+	var scare := _play_catch_scare(-3.0)
 	manager.notify("It caught you. In a real investigation, you would be dead.", &"danger")
 	manager.add_field_note("The entity caught me during a hunt. (Training: no harm done.)")
-	_release_timer = 1.4
+	_release_timer = JumpScare.TOTAL_TIME if scare else 1.4
 
 
 func _process(delta: float) -> void:
@@ -327,12 +349,13 @@ func _process(delta: float) -> void:
 			hunt_director.end_hunt()
 	if _death_timer >= 0.0:
 		_death_timer -= delta
-		player.camera.offset = Vector2(randf_range(-3, 3), randf_range(-3, 3)) * clampf(_death_timer, 0.0, 1.0)
+		if not jump_scare.playing:
+			player.camera.offset = Vector2(randf_range(-3, 3), randf_range(-3, 3)) * clampf(_death_timer, 0.0, 1.0)
 		if _death_timer < 0.0:
 			player.camera.offset = Vector2.ZERO
 			hunt_director.shutdown()
 			manager.finish(false)
-			death_screen.show_screen()
+			death_screen.show_screen(jump_scare.playing)
 	if debug_overlay and debug_overlay.visible:
 		debug_overlay.set_text(_debug_text())
 

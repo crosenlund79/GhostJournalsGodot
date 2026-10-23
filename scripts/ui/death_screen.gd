@@ -38,9 +38,11 @@ func _ready() -> void:
 	_content.add_child(UiTheme.make_button("Restart Investigation", func() -> void: restart_requested.emit()))
 
 
-func show_screen() -> void:
+## `behind_fog`: the jump scare's fog already hides the switch, so start
+## fully dark and only fade the text in.
+func show_screen(behind_fog: bool = false) -> void:
 	visible = true
-	_t = 0.0
+	_t = 1.2 if behind_fog else 0.0
 
 
 func _process(delta: float) -> void:

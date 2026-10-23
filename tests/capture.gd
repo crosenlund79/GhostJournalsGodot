@@ -57,6 +57,27 @@ func _setup() -> void:
 	var p: Node = _inv.player
 	var house: Node = _inv.house
 	match _scenario:
+		"scare":
+			_shots = [[20, "", func() -> void:
+					_inv.electrical.set_power(true)
+					p.global_position = house.cell_to_world(Vector2i(5, 15))
+					p.aim_override = Vector2.RIGHT
+					_inv.ghost._state_timer = 0.0],
+				[25, "", func() -> void:
+					_inv.hunt_director.start_hunt()
+					_inv.ghost._hunt_grace = 99.0
+					_inv.ghost.global_position = p.global_position + Vector2(110, -40)],
+				[40, "scare_0_before"],
+				[42, "", func() -> void: _inv.ghost._catch_player()],
+				[50, "scare_1_rush"],
+				[55, "scare_2_rush_late"],
+				[63, "scare_3_covered"],
+				[78, "scare_4_fog"],
+				[100, "scare_5_fog_clearing"],
+				[110, "scare_6_fog_thinning"],
+				[125, "scare_7_fog_clearing"],
+				[145, "scare_8_death_screen"],
+			]
 		"ghost":
 			var step := func(dir: Vector2) -> void:
 				_inv.ghost.global_position += dir
